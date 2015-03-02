@@ -6,7 +6,12 @@ frequency, samplerate, duration = 1000, 44100, 20000
 nchannels = 1 # change to 2 for stereo
 
 def mkSine(freq=1000, peak=0.5, samplerate=44100, nchannels=1):
-	sinusoid = (2**15 - 1) * np.sin(2.0 * np.pi * freq * np.arange(0, 20000) / float(samplerate)) * peak
+	wavelen = 0.0
+	if( freq != 0.0 ):
+		wavelen = 1.0/freq
+	wavesize = wavelen * samplerate
+
+	sinusoid = (2**15 - 1) * np.sin(2.0 * np.pi * freq * np.arange(0, wavesize) / float(samplerate)) * peak
 	samples = np.array(sinusoid, dtype=np.int16)
 	if(nchannels > 1):
 		samples = np.tile(samples, (nchannels, 1)).T
@@ -23,7 +28,7 @@ pg.init()
 #if nchannels > 1: #copy mono signal to two channels
 #       samples = np.tile(samples, (nchannels, 1)).T
 #sound = pg.sndarray.make_sound(samples)
-sound = mkSine(frequency, 0.2, samplerate)
+sound = mkSine(frequency, 0.1, samplerate)
 sound.play(-1)
 
 time.sleep(duration/float(samplerate)*10)
