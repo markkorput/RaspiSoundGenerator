@@ -9,35 +9,46 @@ import sound
 import mouse
 import sattr
 
-app = foundation.CementApp('RaspiSoundGenerator')
+class AppClass:
+  def __init__(self):
+    self.setup()
+
+  def setup(self):
+    self.app = foundation.CementApp('RaspiSoundGenerator')
+    self.app.setup()
+
+    self.gain = sattr.Sattr(value=0.1, min=0.0, max=1.0)
+    self.frequency = sattr.Sattr(value=300.0, min=1.0, max=2000.0)
+
+    self.sounder = sound.SineSound(frequency=self.frequency.value, gain=self.gain.value)
+    self.sounder.start()
+
+    self.mouse = mouse.MouseFileReader()
+    self.mouse.xSensitivity = 0.001
+    self.mouse.ySensitivity = 1.3
+    self.mouse.x = self.gain.value
+    self.mouse.y = self.frequency.value
+
+    self.app.run()
+
+  def update(self):
+    self.mouse.update()
+
+    if(self.mouse.x != self.gain.value) or (self.mouse.y != self.frequency.value):
+      self.gain.set(self.mouse.x)
+      self.frequency.set(self.mouse.y)
+      print ("Freq: %.1f, Peak: %.1f"  % (self.frequency.value, self.gain.value))
+      self.sounder.change(frequency = self.frequency.value, gain = self.gain.value)
+
+  def destroy(self):
+    self.app.close()
+
+
+theApp = AppClass()
 
 try:
-  app.setup()
-  app.run()
-
-  gain = sattr.Sattr(value=0.1, min=0.0, max=1.0)
-  frequency = sattr.Sattr(value=300.0, min=1.0, max=2000.0)
-
-  sounder = sound.SineSound(frequency=frequency.value, gain=gain.value)
-  sounder.start()
-
-  mouse = mouse.MouseFileReader()
-  mouse.xSensitivity = 0.001
-  mouse.ySensitivity = 1.3
-  mouse.x = gain.value
-  mouse.y = frequency.value
-
   while( 1 ):
-    mouse.update()
-
-    newFreq = mouse.x
-    newPeak = mouse.y
-
-    if(mouse.x != gain.value) or (mouse.y != frequency.value):
-      gain.set(mouse.x)
-      frequency.set(mouse.y)
-      print ("Freq: %.1f, Peak: %.1f"  % (frequency.value, gain.value))
-      sounder.change(frequency = frequency.value, gain = gain.value)
+    theApp.update()
 
 except exc.CaughtSignal as e:
     if e.signum == signal.SIGTERM:
@@ -47,4 +58,5 @@ except exc.CaughtSignal as e:
         print("Caught signal SIGINT...")
         # do something to handle signal here
 finally:
-  app.close()
+  theApp.destroy()
+
