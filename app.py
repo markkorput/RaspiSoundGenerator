@@ -7,6 +7,7 @@ import numpy as np
 
 import sound
 import mouse
+import sattr
 
 app = foundation.CementApp('RaspiSoundGenerator')
 
@@ -14,34 +15,29 @@ try:
   app.setup()
   app.run()
 
-  maxFreq = 2000.0
-  minFreq = 1.0
-  currentFreq = 500.0
+  gain = sattr.Sattr(value=0.1, min=0.0, max=1.0)
+  frequency = sattr.Sattr(value=300.0, min=1.0, max=2000.0)
 
-  maxPeak = 1.0
-  minPeak = 0.0
-  currentPeak = 0.1
-
-  sounder = sound.SineSound()
+  sounder = sound.SineSound(frequency=frequency.value, gain=gain.value)
   sounder.start()
-  
+
   mouse = mouse.MouseFileReader()
   mouse.xSensitivity = 0.001
   mouse.ySensitivity = 1.3
-  mouse.x = currentPeak
-  mouse.y = currentFreq
+  mouse.x = gain.value
+  mouse.y = frequency.value
 
   while( 1 ):
     mouse.update()
 
-    newFreq = np.clip(mouse.y, minFreq, maxFreq)
-    newPeak = np.clip(mouse.x, minPeak, maxPeak)
+    newFreq = mouse.x
+    newPeak = mouse.y
 
-    if(newPeak != currentPeak) or (newFreq != currentFreq):
-      currentFreq = newFreq
-      currentPeak = newPeak
-      print ("Freq: %.1f, Peak: %.1f"  % (currentFreq, currentPeak))
-      sounder.change(frequency = currentFreq, gain = currentPeak)
+    if(mouse.x != gain.value) or (mouse.y != frequency.value):
+      gain.set(mouse.x)
+      frequency.set(mouse.y)
+      print ("Freq: %.1f, Peak: %.1f"  % (frequency.value, gain.value))
+      sounder.change(frequency = frequency.value, gain = gain.value)
 
 except exc.CaughtSignal as e:
     if e.signum == signal.SIGTERM:
