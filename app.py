@@ -1,23 +1,12 @@
 #
 # start sound output system
 #
-
+from cement.core import foundation
 import numpy as np
 import pygame as pg
 import time
+import struct
 
-frequency, samplerate, duration = 1000, 44100, 20000
-nchannels = 1 # change to 2 for stereo
-
-freqSensitivity = 1.3
-maxFreq = 2000.0
-minFreq = 1.0
-currentFreq = 500.0
-
-peakSensitivity = 0.001
-maxPeak = 1.0
-minPeak = 0.0
-currentPeak = 0.1
 
 def mkSine(freq=1000, peak=0.1, samplerate=44100, nchannels=1):
   wavelen = 0.0
@@ -31,20 +20,6 @@ def mkSine(freq=1000, peak=0.1, samplerate=44100, nchannels=1):
     samples = np.tile(samples, (nchannels, 1)).T
   return pg.sndarray.make_sound(samples)
 
-
-pg.mixer.pre_init(samplerate, -16, nchannels)
-pg.init()
-sound = mkSine(currentFreq, currentPeak, samplerate, nchannels)
-sound.play(-1)
-
-
-#
-# start mouse input system
-#
-
-import struct
-
-file = open( "/dev/input/mice", "rb" );
 
 def getMouseEvent():
   buf = file.read(3);
@@ -76,8 +51,40 @@ def getMouseEvent():
     sound = newSound
     sound.play(-1)
 
-while( 1 ):
-  getMouseEvent();
+
+app = foundation.CementApp('RaspiSoundGenerator')
+
+try:
+	app.setup()
+	app.run()
+
+	frequency, samplerate, duration = 1000, 44100, 20000
+	nchannels = 1 # change to 2 for stereo
+
+	freqSensitivity = 1.3
+	maxFreq = 2000.0
+	minFreq = 1.0
+	currentFreq = 500.0
+
+	peakSensitivity = 0.001
+	maxPeak = 1.0
+	minPeak = 0.0
+	currentPeak = 0.1
+
+	pg.mixer.pre_init(samplerate, -16, nchannels)
+	pg.init()
+	sound = mkSine(currentFreq, currentPeak, samplerate, nchannels)
+	sound.play(-1)
+	
+	# initialize mouse reader
+	file = open( "/dev/input/mice", "rb" );
+
+	while( 1 ):
+	  getMouseEvent();
+
+	file.close();
+
+finally:
+	app.close()
 
 
-file.close();
