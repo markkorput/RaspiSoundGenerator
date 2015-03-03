@@ -4,12 +4,15 @@
 import signal
 from cement.core import foundation, exc
 import numpy as np
+from pydispatch import dispatcher
 
 import sound
 import mouse
 import sattr
 
 class AppClass:
+  updateSound = False
+
   def __init__(self):
     self.setup()
 
@@ -29,19 +32,28 @@ class AppClass:
     self.mouse.x = self.gain.value
     self.mouse.y = self.frequency.value
 
+    dispatcher.connect( self.handleChange, signal='Sattr::changed', sender=dispatcher.Any )
+
     self.app.run()
 
   def update(self):
     self.mouse.update()
 
-    if(self.mouse.x != self.gain.value) or (self.mouse.y != self.frequency.value):
-      self.gain.set(self.mouse.x)
-      self.frequency.set(self.mouse.y)
+    self.gain.set(self.mouse.x)
+    self.frequency.set(self.mouse.y)
+    #if(self.mouse.x != self.gain.value) or (self.mouse.y != self.frequency.value):
+    #  self.gain.set(self.mouse.x)
+    #  self.frequency.set(self.mouse.y)
+    if self.updateSound == True:
       print ("Freq: %.1f, Peak: %.1f"  % (self.frequency.value, self.gain.value))
       self.sounder.change(frequency = self.frequency.value, gain = self.gain.value)
+      self.updateSound = False
 
   def destroy(self):
     self.app.close()
+
+  def handleChange(self, sender):
+    self.updateSound = True    
 
 
 theApp = AppClass()
