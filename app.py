@@ -1,7 +1,8 @@
 #
 # start sound output system
 #
-from cement.core import foundation
+import signal
+from cement.core import foundation, exc
 import numpy as np
 import pygame as pg
 import time
@@ -83,7 +84,15 @@ try:
 	  getMouseEvent();
 
 	file.close();
+except exc.CaughtSignal as e:
+    # do something with e.signum or e.frame (passed from signal library)
 
+    if e.signum == signal.SIGTERM:
+        print("Caught signal SIGTERM...")
+        # do something to handle signal here
+    elif e.signum == signal.SIGINT:
+        print("Caught signal SIGINT...")
+        # do something to handle signal here
 finally:
 	app.close()
 
