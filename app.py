@@ -8,19 +8,7 @@ import pygame as pg
 import time
 import struct
 
-
-def mkSine(freq=1000, peak=0.1, samplerate=44100, nchannels=1):
-  wavelen = 0.0
-  if( freq != 0.0 ):
-    wavelen = 1.0/freq
-  wavesize = wavelen * samplerate
-
-  sinusoid = (2**15 - 1) * np.sin(2.0 * np.pi * freq * np.arange(0, wavesize) / float(samplerate)) * peak
-  samples = np.array(sinusoid, dtype=np.int16)
-  if(nchannels > 1):
-    samples = np.tile(samples, (nchannels, 1)).T
-  return pg.sndarray.make_sound(samples)
-
+import sound
 
 def getMouseEvent():
   buf = file.read(3);
@@ -46,11 +34,9 @@ def getMouseEvent():
     currentFreq = newFreq
     currentPeak = newPeak
     print ("Freq: %.1f, Peak: %.1f"  % (currentFreq, currentPeak))
-    global sound, samplerate, nchannels
-    newSound = mkSine(currentFreq, currentPeak, samplerate, nchannels)
-    pg.mixer.stop()
-    sound = newSound
-    sound.play(-1)
+
+    global sounder
+    sounder.change(frequency = currentFreq, gain = currentPeak)
 
 
 app = foundation.CementApp('RaspiSoundGenerator')
@@ -58,9 +44,6 @@ app = foundation.CementApp('RaspiSoundGenerator')
 try:
 	app.setup()
 	app.run()
-
-	frequency, samplerate, duration = 1000, 44100, 20000
-	nchannels = 1 # change to 2 for stereo
 
 	freqSensitivity = 1.3
 	maxFreq = 2000.0
@@ -72,10 +55,8 @@ try:
 	minPeak = 0.0
 	currentPeak = 0.1
 
-	pg.mixer.pre_init(samplerate, -16, nchannels)
-	pg.init()
-	sound = mkSine(currentFreq, currentPeak, samplerate, nchannels)
-	sound.play(-1)
+	sounder = sound.SineSound()
+	sounder.start()
 	
 	# initialize mouse reader
 	file = open( "/dev/input/mice", "rb" );
@@ -85,8 +66,6 @@ try:
 
 	file.close();
 except exc.CaughtSignal as e:
-    # do something with e.signum or e.frame (passed from signal library)
-
     if e.signum == signal.SIGTERM:
         print("Caught signal SIGTERM...")
         # do something to handle signal here
