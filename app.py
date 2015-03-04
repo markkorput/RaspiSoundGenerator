@@ -40,6 +40,7 @@ class AppClass:
     self.monitor = monitor.ActivityMonitor(maxIdle=(3), activateDuration=(2), idleLimit=0.3)
 
     dispatcher.connect( self.handleIdleTooLong, signal='Monitor::idleTooLong', sender=dispatcher.Any )
+    dispatcher.connect( self.handleActivationComplete, signal='Monitor::activationComplete', sender=dispatcher.Any )
 
     self.app.run()
 
@@ -68,6 +69,10 @@ class AppClass:
   def handleIdleTooLong(self, sender):
     print('Starting shake-up')
     self.gain.setMin(self.monitor.idleLimit)
+
+  def handleActivationComplete(self, sender):
+    print('Shake-up done')
+    self.gain.setMin(0.0)
 
 theApp = AppClass()
 

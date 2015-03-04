@@ -46,6 +46,10 @@ class ActivityMonitor:
     # idle too long? dipatch a signal!
     if currentValue < self.idleLimit and ep.time > self.maxIdle:
       dispatcher.send( signal='Monitor::idleTooLong', sender=self )
+
+    if currentValue >= self.idleLimit and ep.time > self.activateDuration:
+      dispatcher.send( signal='Monitor::activationComplete', sender=self )
+
     self._prevValue = currentValue
 
   def cleanEpisodes(self):
