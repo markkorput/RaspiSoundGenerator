@@ -9,6 +9,9 @@ from pydispatch import dispatcher
 import sound
 import mouse
 import sattr
+import monitor
+
+import time
 
 class AppClass:
   updateSound = False
@@ -34,17 +37,24 @@ class AppClass:
 
     dispatcher.connect( self.handleChange, signal='Sattr::changed', sender=dispatcher.Any )
 
+    self.monitor = monitor.ActivityMonitor(maxIdle=(3), activateDuration=(2), idleLimit=0.3)
+
+    dispatcher.connect( self.handleIdleTooLong, signal='Monitor::idleTooLong', sender=dispatcher.Any )
+
     self.app.run()
 
-  def update(self):
+  def update(self, dt=0):
     self.mouse.update()
+
+    # tell the monitor how much time has elapsed and what the current gain level is,
+    # it will trigger the 'Monitor::shakeItUp' signal if the gain has been too low for too long
+    self.monitor.update(dt, self.gain.value)
 
     self.gain.set(self.mouse.x)
     self.frequency.set(self.mouse.y)
-    #if(self.mouse.x != self.gain.value) or (self.mouse.y != self.frequency.value):
-    #  self.gain.set(self.mouse.x)
-    #  self.frequency.set(self.mouse.y)
-    if self.updateSound == True:
+
+    # updateSound could be set to by the handleChange callback method
+    if self.updateSound == True: 
       print ("Freq: %.1f, Peak: %.1f"  % (self.frequency.value, self.gain.value))
       self.sounder.change(frequency = self.frequency.value, gain = self.gain.value)
       self.updateSound = False
@@ -55,12 +65,27 @@ class AppClass:
   def handleChange(self, sender):
     self.updateSound = True    
 
+  def handleIdleTooLong(self, sender):
+    print('Starting shake-up')
+    self.gain.setMin(self.monitor.idleLimit)
 
 theApp = AppClass()
 
 try:
+
+  frameTime = (1.0/25.0) # 25fps
+  prevt = time.time()
+
   while( 1 ):
-    theApp.update()
+    t = time.time() # current time
+    dt = t-prevt # elapsed time since laster 'frame'
+
+    theApp.update(dt)
+
+    prevt = t
+    if dt < frameTime: # we don't need to go that fast, sleep a bit if time allows it
+      time.sleep(frameTime - dt)
+
 
 except exc.CaughtSignal as e:
     if e.signum == signal.SIGTERM:
@@ -71,4 +96,5 @@ except exc.CaughtSignal as e:
         # do something to handle signal here
 finally:
   theApp.destroy()
+
 
