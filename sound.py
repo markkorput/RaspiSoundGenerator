@@ -1,5 +1,6 @@
 import numpy as np
 import pygame as pg
+import recorder
 
 class SineSound:
   """SineSound"""
@@ -12,6 +13,8 @@ class SineSound:
     self.sound = None    
     pg.mixer.pre_init(self.samplerate, -self.bits, self.channels)
     pg.init()
+    self._recording = False
+    self.recorder = None
 
   def start(self):
     if self.sound == None:
@@ -37,4 +40,41 @@ class SineSound:
     if(nchannels > 1):
       samples = np.tile(samples, (nchannels, 1)).T
     return pg.sndarray.make_sound(samples)
+
+  def record(self):
+    self._recording = True
+
+  def recording(self):
+    return self._recording
+
+  def loadFile(self, path):
+    self.sound = pg.mixer.Sound(path)
+
+  def playOnce(self, path=None):
+    if(path != None):
+      self.loadFile(path)
+    self.sound.play()
+
+class FileSound:
+  def __init__(self, path=None, gain=0.3):
+    self.path = path
+    self.sound = None
+    self.channel = pg.mixer.Channel(1)
+    self.gain = gain
+    if(self.path != None):
+      self.loadFile(self.path)
+
+  def loadFile(self, fPath):
+    self.sound = pg.mixer.Sound(fPath)
+
+  def play(self, restart=False):
+    if(self.isPlaying() and restart != True):
+      return
+    self.channel.play(self.sound)   
+    #self.sound.play() # default: once
+
+  def isPlaying(self):
+    if(self.sound == None):
+      return False
+    return self.channel.get_busy() #pg.mixer.get_busy()
 

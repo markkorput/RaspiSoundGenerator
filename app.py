@@ -29,6 +29,8 @@ class AppClass:
     self.sounder = sound.SineSound(frequency=self.frequency.value, gain=self.gain.value)
     self.sounder.start()
 
+    self.fileSounder = sound.FileSound(path='audio/weedflute_mac.wav', gain=0.3)
+
     self.mouse = mouse.MouseFileReader()
     self.mouse.xSensitivity = 0.001
     self.mouse.ySensitivity = 1.3
@@ -43,9 +45,19 @@ class AppClass:
     dispatcher.connect( self.handleActivationComplete, signal='Monitor::activationComplete', sender=dispatcher.Any )
 
     self.app.run()
+    self.bRightFirst = True
 
   def update(self, dt=0):
     self.mouse.update()
+    
+    if(self.mouse.bRight):
+      self.fileSounder.play()
+      #print('bRight')
+      #if(self.bRightFirst == True):
+      #  print('right first')
+      #  self.sounder.playOnce('audio/weedflute_mac.wav')
+    else:
+      self.bRightFirst = True
 
     # tell the monitor how much time has elapsed and what the current gain level is,
     # it will trigger the 'Monitor::shakeItUp' signal if the gain has been too low for too long
