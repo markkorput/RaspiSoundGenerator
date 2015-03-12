@@ -13,6 +13,7 @@ import monitor
 from rotary import RotaryEncoder
 from config import StrpConfig
 import time
+import RPi.GPIO as GPIO
 
 class AppClass:
   updateSound = False
@@ -39,6 +40,10 @@ class AppClass:
     self.mouse.ySensitivity = 1.3
     self.mouse.x = self.gain.value
     self.mouse.y = self.frequency.value
+
+    # config GPIOs (used by rotary input)
+    GPIO.setmode(GPIO.BCM)
+    GPIO.setwarnings(False)
 
     self.rotary = RotaryEncoder(self.config.rotaryA, self.config.rotaryB, None, self.onRotary)
     dispatcher.connect( self.onFreqChange, signal='Sattr::changed', sender=self.frequency )
@@ -79,6 +84,7 @@ class AppClass:
 
   def destroy(self):
     self.app.close()
+    GPIO.cleanup()
 
   def onFreqChange(self, sender):
     # self.updateSound = True    

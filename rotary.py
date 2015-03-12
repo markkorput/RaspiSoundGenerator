@@ -23,16 +23,19 @@ class RotaryEncoder:
   direction = 0
 
   # Initialise rotary encoder object
-  def __init__(self,pinA=14,pinB=15,button=None,callback=None,verbose=False):
+  def __init__(self,pinA=14,pinB=15,button=None,callback=None,verbose=False,initializeGPIO=False):
     self.pinA = pinA
     self.pinB = pinB
     self.button = button
     self.callback = callback
     self.verbose = verbose
-    GPIO.setmode(GPIO.BCM)
-    # The following lines enable the internal pull-up resistors
-    # on version 2 (latest) boards
-    GPIO.setwarnings(False)
+
+    if initializeGPIO:
+      GPIO.setmode(GPIO.BCM)
+      # The following lines enable the internal pull-up resistors
+      # on version 2 (latest) boards
+      GPIO.setwarnings(False)
+
     GPIO.setup(self.pinA, GPIO.IN, pull_up_down=GPIO.PUD_UP)
     GPIO.setup(self.pinB, GPIO.IN, pull_up_down=GPIO.PUD_UP)
     if self.button != None:
