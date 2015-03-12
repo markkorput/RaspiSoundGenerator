@@ -4,9 +4,10 @@ import recorder
 
 class SineSound:
   """SineSound"""
-  def __init__(self, frequency=300, gain=0.1, samplerate=44100, channels=1, bits=16):
+  def __init__(self, frequency=300, gain=0.1, samplerate=44100, channels=1, bits=16, amplitude=1.0):
     self.freq = frequency
     self.gain = gain
+    self.amplitude = amplitude
     self.samplerate = samplerate
     self.channels = channels
     self.bits = bits
@@ -18,13 +19,14 @@ class SineSound:
 
   def start(self):
     if self.sound == None:
-      self.sound = self.mkSine(self.freq, self.gain, self.samplerate, self.channels)
+      self.sound = self.mkSine(self.freq, self.amplitude, self.samplerate, self.channels)
     self.sound.play(-1)
 
-  def change(self, frequency=300, gain=0.1):
+  def change(self, frequency=300, amplitude=1.0):
     self.freq = frequency
-    self.gain = gain
-    newSound = self.mkSine(self.freq, self.gain, self.samplerate, self.channels)
+    self.amplitude = amplitude
+    # self.gain = gain
+    newSound = self.mkSine(self.freq, self.amplitude, self.samplerate, self.channels)
     pg.mixer.stop()
     self.sound = newSound
     self.sound.play(-1)
@@ -39,7 +41,16 @@ class SineSound:
     samples = np.array(sinusoid, dtype=np.int16)
     if(nchannels > 1):
       samples = np.tile(samples, (nchannels, 1)).T
-    return pg.sndarray.make_sound(samples)
+
+    sound = pg.sndarray.make_sound(samples)
+    sound.set_volume(self.gain)
+    return sound
+
+
+  def setGain(self, gain):
+    self.gain = gain
+    if self.sound != None:
+      self.sound.set_volume(gain)
 
   def record(self):
     self._recording = True

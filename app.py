@@ -29,7 +29,7 @@ class AppClass:
     self.sounder = sound.SineSound(frequency=self.frequency.value, gain=self.gain.value)
     self.sounder.start()
 
-    self.fileSounder = sound.FileSound(path='audio/weedflute_mac.wav', gain=0.3)
+    self.fileSounder = sound.FileSound(path='audio/sweep01.wav', gain=0.3)
 
     self.mouse = mouse.MouseFileReader()
     self.mouse.xSensitivity = 0.001
@@ -37,7 +37,8 @@ class AppClass:
     self.mouse.x = self.gain.value
     self.mouse.y = self.frequency.value
 
-    dispatcher.connect( self.handleChange, signal='Sattr::changed', sender=dispatcher.Any )
+    dispatcher.connect( self.onFreqChange, signal='Sattr::changed', sender=self.frequency )
+    dispatcher.connect( self.onGainChange, signal='Sattr::changed', sender=self.gain )
 
     self.monitor = monitor.ActivityMonitor(maxIdle=(3), activateDuration=(2), idleLimit=0.3)
 
@@ -67,16 +68,21 @@ class AppClass:
     self.frequency.set(self.mouse.y)
 
     # updateSound could be set to by the handleChange callback method
-    if self.updateSound == True: 
-      print ("Freq: %.1f, Peak: %.1f"  % (self.frequency.value, self.gain.value))
-      self.sounder.change(frequency = self.frequency.value, gain = self.gain.value)
-      self.updateSound = False
+    # if self.updateSound == True: 
+    #  print ("Freq: %.1f, Peak: %.1f"  % (self.frequency.value, self.gain.value))
+    #  self.sounder.change(frequency = self.frequency.value)
+    #  self.updateSound = False
 
   def destroy(self):
     self.app.close()
 
-  def handleChange(self, sender):
-    self.updateSound = True    
+  def onFreqChange(self, sender):
+    # self.updateSound = True    
+    print ("Freq: %.1f, Peak: %.1f"  % (self.frequency.value, self.gain.value))
+    self.sounder.change(frequency = self.frequency.value)
+
+  def onGainChange(self, sender):
+    self.sounder.setGain(self.gain.value)
 
   def handleIdleTooLong(self, sender):
     print('Starting shake-up')
