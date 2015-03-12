@@ -10,7 +10,8 @@ import sound
 import mouse
 import sattr
 import monitor
-
+from rotary import RotaryEncoder
+from config import StrpConfig
 import time
 
 class AppClass:
@@ -22,6 +23,8 @@ class AppClass:
   def setup(self):
     self.app = foundation.CementApp('RaspiSoundGenerator')
     self.app.setup()
+
+    self.config = StrpConfig()
 
     self.gain = sattr.Sattr(value=0.1, min=0.0, max=1.0)
     self.frequency = sattr.Sattr(value=300.0, min=1.0, max=2000.0)
@@ -37,6 +40,7 @@ class AppClass:
     self.mouse.x = self.gain.value
     self.mouse.y = self.frequency.value
 
+    self.rotary = RotaryEncoder(self.config.rotaryA, self.config.rotaryB, None, self.onRotary)
     dispatcher.connect( self.onFreqChange, signal='Sattr::changed', sender=self.frequency )
     dispatcher.connect( self.onGainChange, signal='Sattr::changed', sender=self.gain )
 
@@ -91,6 +95,16 @@ class AppClass:
   def handleActivationComplete(self, sender):
     print('Shake-up done')
     self.gain.setMin(0.0)
+
+  def onRotary(self, event):
+    newValue = self.frequency.value
+    if event == RotaryEncoder.CLOCKWISE:
+      newValue += 10
+    elif event == RotaryEncoder.ANTICLOCKWISE:
+      newValue -= 10
+
+    self.frequency.set(newValue)
+# end of class AppClass
 
 theApp = AppClass()
 
