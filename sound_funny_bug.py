@@ -17,29 +17,35 @@ class SineSound:
     self.channel = pg.mixer.Channel(0)
     self._recording = False
     self.recorder = None
+    self.nextSound = self.sound
+
+  def update(self):
+    if self.channel.get_queue() == None:
+      self.channel.queue(self.sound)
 
   def start(self):
     if self.sound == None:
       self.sound = self.mkSine(self.freq, self.amplitude, self.samplerate, self.channels)
     #self.sound.play(-1)
-    self.channel.play(self.sound, -1)
+    self.channel.play(self.sound)
 
   def change(self, frequency=300, amplitude=1.0):
     self.freq = frequency
     self.amplitude = amplitude
-    newSound = self.mkSine(self.freq, self.amplitude, self.samplerate, self.channels)
+    self.sound = self.mkSine(self.freq, self.amplitude, self.samplerate, self.channels)
     #pg.mixer.stop()
-    # self.channel.queue(newSound)
-    self.channel.play(newSound, -1)
-    self.sound.stop()
-    self.sound = newSound
+    #self.sound.stop()
+    #self.channel.queue(newSound)
+    # self.channel.play(newSound, -1)
+    # self.sound.stop()
+    # self.sound = newSound
     #self.sound.play(-1)
 
   def mkSine(self, freq=1000, peak=0.1, samplerate=44100, nchannels=1):
     wavelen = 0.0
     if( freq != 0.0 ):
       wavelen = 1.0/freq
-    wavesize = wavelen * samplerate
+    wavesize = wavelen * samplerate * 10
 
     sinusoid = (2**15 - 1) * np.sin(2.0 * np.pi * freq * np.arange(0, wavesize) / float(samplerate)) * peak
     samples = np.array(sinusoid, dtype=np.int16)
@@ -89,7 +95,7 @@ class FileSound:
     #self.sound.play() # default: once
 
   def isPlaying(self):
-    # if(self.sound == None):
-    #  return False
+    if(self.sound == None):
+      return False
     return self.channel.get_busy() #pg.mixer.get_busy()
 
