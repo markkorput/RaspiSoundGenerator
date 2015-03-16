@@ -14,12 +14,14 @@ from rotary import RotaryEncoder
 from config import StrpConfig
 import time
 import RPi.GPIO as GPIO
+from touch import CapReader
 
 class AppClass:
   updateSound = False
 
-  def __init__(self):
+  def __init__(self, verbose=False):
     self.setup()
+    self.verbose = verbose
 
   def setup(self):
     self.app = foundation.CementApp('RaspiSoundGenerator')
@@ -54,12 +56,22 @@ class AppClass:
     dispatcher.connect( self.handleIdleTooLong, signal='Monitor::idleTooLong', sender=dispatcher.Any )
     dispatcher.connect( self.handleActivationComplete, signal='Monitor::activationComplete', sender=dispatcher.Any )
 
+    self.touch1 = CapReader(inPin=17, outPin=18)
+
+    self.gain.setMax(self.monitor.idleLimit+0.1)
     self.app.run()
     self.bRightFirst = True
 
   def update(self, dt=0):
-    self.mouse.update()
+    # self.mouse.update()
     
+    if self.touch1.update(): # returns True if touching
+      self.gain.setMax(1.0)
+      if self.verbose:
+        print("Touch")
+    else:
+      self.gain.setMax(self.monitor.idleLimit+0.1)
+
     if(self.mouse.bRight):
       self.fileSounder.play()
       #print('bRight')
@@ -112,7 +124,7 @@ class AppClass:
     self.frequency.set(newValue)
 # end of class AppClass
 
-theApp = AppClass()
+theApp = AppClass(verbose=True)
 
 try:
 
