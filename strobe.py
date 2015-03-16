@@ -45,7 +45,7 @@ if __name__ == "__main__":
       GPIO.setmode(GPIO.BCM)
       GPIO.setwarnings(False)
 
-      strobe = Strobe(outPin=17, frequency=10, verbose=True)
+      strobe = Strobe(outPin=17, frequency=30, timeOn=0.01, verbose=True)
 
       frameTime = (1.0/25.0) # 25fps
       prevt = time.time()
@@ -58,8 +58,8 @@ if __name__ == "__main__":
         strobe.update(dt)
 
         prevt = t
-        if dt < frameTime: # we don't need to go that fast, sleep a bit if time allows it
-          time.sleep(frameTime - dt)
+        #if dt < frameTime: # we don't need to go that fast, sleep a bit if time allows it
+        #  time.sleep(frameTime - dt)
 
     except exc.CaughtSignal as e:
         if e.signum == signal.SIGTERM:
