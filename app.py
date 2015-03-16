@@ -58,19 +58,19 @@ class AppClass:
 
     self.touch1 = CapReader(inPin=17, outPin=18)
 
-    self.gain.setMax(self.monitor.idleLimit+0.1)
+    #self.gain.setMax(self.monitor.idleLimit+0.1)
     self.app.run()
     self.bRightFirst = True
 
   def update(self, dt=0):
     # self.mouse.update()
     
-    if self.touch1.update(): # returns True if touching
-      self.gain.setMax(1.0)
-      if self.verbose:
-        print("Touch")
-    else:
-      self.gain.setMax(self.monitor.idleLimit+0.1)
+    #if self.touch1.update(): # returns True if touching
+    #  self.gain.setMax(1.0)
+    #  if self.verbose:
+    #    print("Touch")
+    #else:
+    #  self.gain.setMax(self.monitor.idleLimit+0.1)
 
     if(self.mouse.bRight):
       self.fileSounder.play()
@@ -107,10 +107,12 @@ class AppClass:
     self.sounder.setGain(self.gain.value)
 
   def handleIdleTooLong(self, sender):
+    return
     print('Starting shake-up')
     self.gain.setMin(self.monitor.idleLimit)
 
   def handleActivationComplete(self, sender):
+    return
     print('Shake-up done')
     self.gain.setMin(0.0)
 

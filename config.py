@@ -3,6 +3,6 @@ class StrpConfig:
     self.rotaryA = 22 #15
     self.rotaryB = 23 #14
     self.rotaryFreqStep = 0 # 10.0
-    self.rotaryGainStep = 0.02
+    self.rotaryGainStep = 0.08
 
 # end of class StrpConfig
