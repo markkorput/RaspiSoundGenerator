@@ -3,13 +3,24 @@
 import RPi.GPIO as GPIO, time
 
 class CapReader:
-    def __init__(self, inPin=17, outPin=18, timeout=10000):
+    def __init__(self, inPin=17, outPin=18, timeout=10000, treshold=100, cycles=10):
         self.inPin = inPin
         self.outPin = outPin
         self.timeout = timeout
+        self.cycles = cycles
+        self.treshold = treshold
+        self.isTouching = False
+        self.totalValue = 0
 
     def read(self):
         return self._CapRead(self.inPin, self.outPin, self.timeout)
+
+    def update(self):
+        self.totalValue = 0
+        for j in range(0, self.cycles):
+            self.totalValue += self.read()
+        self.isTouching = self.totalValue >= self.treshold
+        return self.isTouching
 
     def _CapRead(self, inPin=17,outPin=18, timeout=10000):
         total = 0
@@ -65,14 +76,15 @@ if __name__ == "__main__":
         # total = 0
         # for j in range(0,10):
         #     total += CapRead(inPin=17,outPin=18);
-        total = 0
-        for j in range(0, 10):
-            total += reader.read()
+        touching = reader.update()
 
-        str = ""
-        for j in range(0, int(total / 10.0)):
+        str = "N - "
+        if touching:
+            str = "Y - "
+
+        for j in range(0, int(reader.totalValue / 10.0)):
             str += "#"
-        print str + " - total: %d" % (total)
+        print str + " - total: %d" % (reader.totalValue)
   
     # clean before you leave
     GPIO.cleanup()
