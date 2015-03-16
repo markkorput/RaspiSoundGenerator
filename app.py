@@ -38,16 +38,16 @@ class AppClass:
     self.fileSounder = sound.FileSound(path='audio/sweep01.wav', gain=0.3)
 
     self.mouse = mouse.MouseFileReader()
-    self.mouse.xSensitivity = 0.001
-    self.mouse.ySensitivity = 1.3
-    self.mouse.x = self.gain.value
-    self.mouse.y = self.frequency.value
+    # self.mouse.xSensitivity = 0.001
+    # self.mouse.ySensitivity = 1.3
+    # self.mouse.x = self.gain.value
+    # self.mouse.y = self.frequency.value
 
     # config GPIOs (used by rotary input)
     GPIO.setmode(GPIO.BCM)
     GPIO.setwarnings(False)
 
-    self.rotary = RotaryEncoder(self.config.rotaryA, self.config.rotaryB, None, self.onRotary)
+    self.rotary = RotaryEncoder(self.config.rotaryA, self.config.rotaryB, None, self.onRotary, True)
     dispatcher.connect( self.onFreqChange, signal='Sattr::changed', sender=self.frequency )
     dispatcher.connect( self.onGainChange, signal='Sattr::changed', sender=self.gain )
 
@@ -85,8 +85,8 @@ class AppClass:
     # it will trigger the 'Monitor::shakeItUp' signal if the gain has been too low for too long
     self.monitor.update(dt, self.gain.value)
 
-    self.gain.set(self.mouse.x)
-    self.frequency.set(self.mouse.y)
+    #self.gain.set(self.mouse.x)
+    #self.frequency.set(self.mouse.y)
 
     # updateSound could be set to by the handleChange callback method
     # if self.updateSound == True: 
@@ -115,13 +115,13 @@ class AppClass:
     self.gain.setMin(0.0)
 
   def onRotary(self, event):
-    newValue = self.frequency.value
     if event == RotaryEncoder.CLOCKWISE:
-      newValue += 10
+      self.frequency.set(self.frequency.value + self.config.rotaryFreqStep)
+      self.gain.set(self.gain.value + self.config.rotaryGainStep)
     elif event == RotaryEncoder.ANTICLOCKWISE:
-      newValue -= 10
+      self.frequency.set(self.frequency.value - self.config.rotaryFreqStep)
+      self.gain.set(self.gain.value - self.config.rotaryGainStep)
 
-    self.frequency.set(newValue)
 # end of class AppClass
 
 theApp = AppClass(verbose=True)
