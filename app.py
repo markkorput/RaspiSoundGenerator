@@ -30,7 +30,7 @@ class AppClass:
     self.config = StrpConfig()
 
     self.gain = sattr.Sattr(value=0.1, min=0.0, max=1.0)
-    self.frequency = sattr.Sattr(value=300.0, min=1.0, max=2000.0)
+    self.frequency = sattr.Sattr(value=120.0, min=1.0, max=2000.0)
 
     self.sounder = sound.SineSound(frequency=self.frequency.value, gain=self.gain.value)
     self.sounder.start()
@@ -121,6 +121,7 @@ class AppClass:
     elif event == RotaryEncoder.ANTICLOCKWISE:
       self.frequency.set(self.frequency.value - self.config.rotaryFreqStep)
       self.gain.set(self.gain.value - self.config.rotaryGainStep)
+    print ("Freq: %.1f, Peak: %.1f"  % (self.frequency.value, self.gain.value))
 
 # end of class AppClass
 
