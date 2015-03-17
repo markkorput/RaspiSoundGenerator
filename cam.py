@@ -3,7 +3,7 @@ import pygame.camera
 from pygame.locals import *
 
 class CamViewer:
-  def __init__(self, devicePath='/dev/video0', camSize=(640,480), displaySize=(640, 480), verbose=False):
+  def __init__(self, devicePath='/dev/video0', camSize=(480,360), displaySize=(640, 480), verbose=False):
     self.devPath = devicePath
     self.camSize = camSize
     self.displaySize = displaySize
@@ -69,7 +69,7 @@ class CamAppClass(AppClass):
 
     self.viewer = None
     if camlist and len(camlist) > 0:
-      self.viewer = CamViewer(devicePath=camlist[0], camSize=(32,24), displaySize=(640,480), verbose=True)
+      self.viewer = CamViewer(devicePath=camlist[0], camSize=(480, 360), verbose=True)
 
   def start(self):
     if self.viewer == None:
