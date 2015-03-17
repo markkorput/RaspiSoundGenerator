@@ -20,8 +20,8 @@ class AppClass:
   updateSound = False
 
   def __init__(self, verbose=False):
-    self.setup()
     self.verbose = verbose
+    self.setup()
 
   def setup(self):
     self.app = foundation.CementApp('RaspiSoundGenerator')
@@ -56,21 +56,34 @@ class AppClass:
     dispatcher.connect( self.handleIdleTooLong, signal='Monitor::idleTooLong', sender=dispatcher.Any )
     dispatcher.connect( self.handleActivationComplete, signal='Monitor::activationComplete', sender=dispatcher.Any )
 
-    self.touch1 = CapReader(inPin=17, outPin=18)
+    # self.touch1 = CapReader(inPin=17, outPin=18)
 
-    #self.gain.setMax(self.monitor.idleLimit+0.1)
+    self.touches = []
+    for i in range(0,len(self.config.touchInPins)):
+      self.touches.append(CapReader(inPin=self.config.touchInPins[i], outPin=self.config.touchOutPins[i]))
+
+    if self.verbose:
+      print('Created %d touch sensor readers' % len(self.touches))
+
+
+    self.gain.setMax(self.monitor.idleLimit+0.1)
     self.app.run()
     self.bRightFirst = True
 
   def update(self, dt=0):
     # self.mouse.update()
     
-    #if self.touch1.update(): # returns True if touching
-    #  self.gain.setMax(1.0)
-    #  if self.verbose:
-    #    print("Touch")
-    #else:
-    #  self.gain.setMax(self.monitor.idleLimit+0.1)
+    # if self.touch1.update(): # returns True if touching
+    #   self.gain.setMax(1.0)
+    #   if self.verbose:
+    #     print("Touch")
+    # else:
+    #   self.gain.setMax(self.monitor.idleLimit+0.1)
+
+    for i in range(0, len(self.touches)):
+      touch = self.touches[i]
+      if touch.update():
+        print("Touch on pin %d" % touch.inPin)
 
     if(self.mouse.bRight):
       self.fileSounder.play()
@@ -123,7 +136,6 @@ class AppClass:
     elif event == RotaryEncoder.ANTICLOCKWISE:
       self.frequency.set(self.frequency.value - self.config.rotaryFreqStep)
       self.gain.set(self.gain.value - self.config.rotaryGainStep)
-    print ("Freq: %.1f, Peak: %.1f"  % (self.frequency.value, self.gain.value))
 
 # end of class AppClass
 
