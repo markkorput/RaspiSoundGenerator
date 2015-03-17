@@ -15,6 +15,7 @@ from config import StrpConfig
 import time
 import RPi.GPIO as GPIO
 from touch import CapReader
+import math
 
 class AppClass:
   updateSound = False
@@ -28,9 +29,11 @@ class AppClass:
     self.app.setup()
 
     self.config = StrpConfig()
-
+    
     self.gain = sattr.Sattr(value=0.1, min=0.0, max=1.0)
-    self.frequency = sattr.Sattr(value=120.0, min=1.0, max=2000.0)
+    self.frequency = sattr.Sattr(value=120.0, min=self.config.freqMin, max=self.config.freqMax) #min=1.0, max=2000.0)
+    print 'freq initial: %.1f' % self.frequency.value
+    self.frequencyPos = sattr.Sattr(value = 0.0) #value=math.asin(self.frequency.value))
 
     self.sounder = sound.SineSound(frequency=self.frequency.value, gain=self.gain.value)
     self.sounder.start()
@@ -50,7 +53,8 @@ class AppClass:
     self.rotary = None
     if self.config and self.config.rotaryA and self.config.rotaryB:
       self.rotary = RotaryEncoder(pinA=self.config.rotaryA, pinB=self.config.rotaryB, button=None, callback=self.onRotary, verbose=True)
-    
+
+    dispatcher.connect( self.onFreqPosChange, signal='Sattr::changed', sender=self.frequencyPos )    
     dispatcher.connect( self.onFreqChange, signal='Sattr::changed', sender=self.frequency )
     dispatcher.connect( self.onGainChange, signal='Sattr::changed', sender=self.gain )
 
@@ -114,6 +118,16 @@ class AppClass:
     self.app.close()
     GPIO.cleanup()
 
+  def onFreqPosChange(self, sender):
+    print ("Freq pos: %.1f" % sender.value)
+    min = self.config.freqMin
+    max = self.config.freqMax
+    delta = max-min
+    # frequencyPos is a frequency affector; its value traverse a sine wave
+    # which is used to calculate new frequency values, based on the configure
+    # minimum and maximum frequencies
+    self.frequency.set(min + delta * (math.sin(sender.value) * 0.5 + 0.5))
+
   def onFreqChange(self, sender):
     # self.updateSound = True    
     print ("Freq: %.1f, Gain: %.1f"  % (self.frequency.value, self.gain.value))
@@ -135,9 +149,11 @@ class AppClass:
 
   def onRotary(self, event):
     if event == RotaryEncoder.CLOCKWISE:
+      self.frequencyPos.set(self.frequencyPos.value + self.config.rotaryFreqPosStep)
       self.frequency.set(self.frequency.value + self.config.rotaryFreqStep)
       self.gain.set(self.gain.value + self.config.rotaryGainStep)
     elif event == RotaryEncoder.ANTICLOCKWISE:
+      self.frequencyPos.set(self.frequencyPos.value - self.config.rotaryFreqPosStep)
       self.frequency.set(self.frequency.value - self.config.rotaryFreqStep)
       self.gain.set(self.gain.value - self.config.rotaryGainStep)
 
