@@ -47,7 +47,10 @@ class AppClass:
     GPIO.setmode(GPIO.BCM)
     GPIO.setwarnings(False)
 
-    self.rotary = RotaryEncoder(self.config.rotaryA, self.config.rotaryB, None, self.onRotary, True)
+    self.rotary = None
+    if self.config and self.config.rotaryA and self.config.rotaryB:
+      self.rotary = RotaryEncoder(pinA=self.config.rotaryA, pinB=self.config.rotaryB, button=None, callback=self.onRotary, verbose=True)
+    
     dispatcher.connect( self.onFreqChange, signal='Sattr::changed', sender=self.frequency )
     dispatcher.connect( self.onGainChange, signal='Sattr::changed', sender=self.gain )
 
@@ -113,10 +116,11 @@ class AppClass:
 
   def onFreqChange(self, sender):
     # self.updateSound = True    
-    print ("Freq: %.1f, Peak: %.1f"  % (self.frequency.value, self.gain.value))
+    print ("Freq: %.1f, Gain: %.1f"  % (self.frequency.value, self.gain.value))
     self.sounder.change(frequency = self.frequency.value)
 
   def onGainChange(self, sender):
+    print ("Freq: %.1f, Gain: %.1f"  % (self.frequency.value, self.gain.value))
     self.sounder.setGain(self.gain.value)
 
   def handleIdleTooLong(self, sender):
