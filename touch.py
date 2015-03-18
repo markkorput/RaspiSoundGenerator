@@ -85,6 +85,8 @@ class CapReaderGroup:
       print(msg)
       
   def update(self, dt):
+    self.touchCount.update(dt)
+
     count = len(self.capReaders)
     for idx,reader in enumerate(self.capReaders):
       if reader.update(dt):
