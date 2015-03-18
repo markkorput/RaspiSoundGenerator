@@ -11,7 +11,7 @@ class CapReader:
     self.timeout = timeout
     self.cycles = cycles
     self.treshold = treshold
-    self.isTouching = False
+    self.isTouching = Sattr(value=False)
     self.totalValue = 0
 
   def read(self):
@@ -22,10 +22,10 @@ class CapReader:
     for j in range(0, self.cycles):
       self.totalValue += self._CapRead(self.inPin, self.outPin, self.timeout) # self.read()
       if self.totalValue >= self.treshold:
-        self.isTouching = True
+        self.isTouching.set(True)
         return True
 
-    self.isTouching = False
+    self.isTouching.set(False)
     return False
 
   def _CapRead(self, inPin=17,outPin=18, timeout=10000):
@@ -76,7 +76,7 @@ class CapReaderGroup:
     for i in range(0,len(inPins)):
       reader = CapReader(inPin=inPins[i], outPin=outPins[i], timeout=timeout, treshold=treshold, cycles=cycles)
       self.capReaders.append(reader)
-      dispatcher.connect( self._onTouchChange, signal='Sattr::changed', sender=reader )
+      dispatcher.connect( self._onTouchChange, signal='Sattr::changed', sender=reader.isTouching )
 
     self.log('Created %d touch sensor readers' % len(self.capReaders))
 
@@ -94,7 +94,7 @@ class CapReaderGroup:
     count = 0
 
     for reader in self.capReaders:
-      if reader.isTouching:
+      if reader.isTouching.value:
         count += 1
 
     if count == 0:
