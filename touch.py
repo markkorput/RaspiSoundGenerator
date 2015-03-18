@@ -23,10 +23,10 @@ class CapReader:
       self.totalValue += self._CapRead(self.inPin, self.outPin, self.timeout) # self.read()
       if self.totalValue >= self.treshold:
         self.isTouching = True
-        return true
+        return True
 
     self.isTouching = False
-    return false
+    return False
 
   def _CapRead(self, inPin=17,outPin=18, timeout=10000):
     total = 0
@@ -88,7 +88,7 @@ class CapReaderGroup:
     count = len(self.capReaders)
     for idx,reader in enumerate(self.capReaders):
       if reader.update(dt):
-        self.log("Touch on pin %d (%d/%d)" % (reader.inPin, idx, count))
+        self.log("Touch on pin %d (%d/%d)" % (reader.inPin, idx+1, count))
 
   def _onTouchChange(self, sender):
     count = 0
