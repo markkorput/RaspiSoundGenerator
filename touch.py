@@ -1,6 +1,7 @@
 #!/user/bin/env python
 
 import RPi.GPIO as GPIO, time
+from sattr import DelaySattr
 
 class CapReader:
     def __init__(self, inPin=17, outPin=18, timeout=10000, treshold=100, cycles=10):
@@ -9,18 +10,26 @@ class CapReader:
         self.timeout = timeout
         self.cycles = cycles
         self.treshold = treshold
-        self.isTouching = False
+        # self.isTouching = False
+        self.isTouching = Sattr(value=False, delay=1.0) # default delay of 1.0 second
         self.totalValue = 0
 
     def read(self):
         return self._CapRead(self.inPin, self.outPin, self.timeout)
 
-    def update(self):
+    def update(self, dt=0.0):
+        self.isTouching.update(dt)
+
         self.totalValue = 0
         for j in range(0, self.cycles):
             self.totalValue += self.read()
-        self.isTouching = self.totalValue >= self.treshold
-        return self.isTouching
+
+        if self.totalValue >= self.treshold:
+            self.isTouching.set(value=True, immediate=True)
+            return true
+
+        self.isTouching.set(value=False) # delayed
+        return false
 
     def _CapRead(self, inPin=17,outPin=18, timeout=10000):
         total = 0

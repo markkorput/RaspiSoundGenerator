@@ -33,9 +33,7 @@ class Sattr:
 
 import time
 
-class TouchSattr(Sattr):
-
-
+class DelaySattr(Sattr):
 
   def __init__(self, value=False, delay=1.0):
     self.value = value
@@ -76,24 +74,16 @@ if __name__ == "__main__":
   dispatcher.connect( onChange, signal='Sattr::changed', sender=attr )
   attr.set(301)
 
-  tAttr = TouchSattr(value=False, delay=0.05)
+  tAttr = DelaySattr(value=False, delay=0.5)
   dispatcher.connect( onTouchChange, signal='Sattr::changed', sender=tAttr )
 
-  firstt = time.time()
-  prevt = time.time()
-  
   tAttr.set(True, True)
-  while prevt - firstt < 2.0:
-    t = time.time() # current time
-    dt = t-prevt # elapsed time since last 'frame'
-    tAttr.update(dt)
-    prevt = t
 
   firstt = time.time()
   prevt = time.time()
  
   tAttr.set(False)
-  while prevt - firstt < 5.0:
+  while prevt - firstt < 2.0:
     t = time.time() # current time
     dt = t-prevt # elapsed time since last 'frame'
     tAttr.update(dt)
