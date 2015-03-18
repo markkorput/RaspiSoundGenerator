@@ -141,14 +141,19 @@ class AppClass:
 
   def onTouchCountChange(self, sender):
     if sender.value == 0:
+      self.log("Lost capacitive control, zero gain")
       # touch count just turned zero, we just lost our last touch (delay already taken into account)
-      self.gain.setMax(0.0)
+      # self.gain.setMax(0.0)
+      self.gain.set(0.0)
       return
 
     if sender.prev == 0: # we just got a first touch
       self.log('TODO: play first touch audio sample')
-      self.gain.setMin(self.config.initialActiveGainMin)
+      # self.gain.setMin(self.config.initialActiveGainMin)
+      self.gain.set(self.config.initialActiveGainMin)
       return
+
+    self.gain.set(sender.value * 1.0 / len(self.touches.capReaders))
 
   def log(self, msg):
     if self.verbose:
