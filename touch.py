@@ -1,74 +1,102 @@
 #!/user/bin/env python
 
 import RPi.GPIO as GPIO, time
-from sattr import DelaySattr
+from sattr import Sattr, DelaySattr
+from pydispatch import dispatcher
 
 class CapReader:
-    def __init__(self, inPin=17, outPin=18, timeout=10000, treshold=100, cycles=10):
-        self.inPin = inPin
-        self.outPin = outPin
-        self.timeout = timeout
-        self.cycles = cycles
-        self.treshold = treshold
-        # self.isTouching = False
-        self.isTouching = Sattr(value=False, delay=1.0) # default delay of 1.0 second
-        self.totalValue = 0
+  def __init__(self, inPin=17, outPin=18, timeout=10000, treshold=100, cycles=10):
+    self.inPin = inPin
+    self.outPin = outPin
+    self.timeout = timeout
+    self.cycles = cycles
+    self.treshold = treshold
+    self.isTouching = False
+    self.totalValue = 0
 
-    def read(self):
-        return self._CapRead(self.inPin, self.outPin, self.timeout)
+  def read(self):
+    return self._CapRead(self.inPin, self.outPin, self.timeout)
 
-    def update(self, dt=0.0):
-        self.isTouching.update(dt)
-
-        self.totalValue = 0
-        for j in range(0, self.cycles):
-            self.totalValue += self.read()
-
+  def update(self, dt=0.0):
+    self.totalValue = 0
+    for j in range(0, self.cycles):
+      self.totalValue += self._CapRead(self.inPin, self.outPin, self.timeout) # self.read()
         if self.totalValue >= self.treshold:
-            self.isTouching.set(value=True, immediate=True)
-            return true
+          self.isTouching = True
+          return true
 
-        self.isTouching.set(value=False) # delayed
-        return false
+      self.isTouching = False
+      return false
 
-    def _CapRead(self, inPin=17,outPin=18, timeout=10000):
-        total = 0
+  def _CapRead(self, inPin=17,outPin=18, timeout=10000):
+    total = 0
+    
+    # set Send Pin Register low
+    GPIO.setup(outPin, GPIO.OUT)
+    GPIO.output(outPin, GPIO.LOW)
+    
+    # set receivePin Register low to make sure pullups are off 
+    GPIO.setup(inPin, GPIO.OUT)
+    GPIO.output(inPin, GPIO.LOW)
+    GPIO.setup(inPin, GPIO.IN)
+    
+    # set send Pin High
+    GPIO.output(outPin, GPIO.HIGH)
+    
+    # while receive pin is LOW AND total is positive value
+    while( GPIO.input(inPin) == GPIO.LOW and total < timeout ):
+        total+=1
+    
+    if ( total > timeout ):
+        return -2 # total variable over timeout
         
-        # set Send Pin Register low
-        GPIO.setup(outPin, GPIO.OUT)
-        GPIO.output(outPin, GPIO.LOW)
-        
-        # set receivePin Register low to make sure pullups are off 
-        GPIO.setup(inPin, GPIO.OUT)
-        GPIO.output(inPin, GPIO.LOW)
-        GPIO.setup(inPin, GPIO.IN)
-        
-        # set send Pin High
-        GPIO.output(outPin, GPIO.HIGH)
-        
-        # while receive pin is LOW AND total is positive value
-        while( GPIO.input(inPin) == GPIO.LOW and total < timeout ):
-            total+=1
-        
-        if ( total > timeout ):
-            return -2 # total variable over timeout
-            
-         # set receive pin HIGH briefly to charge up fully - because the while loop above will exit when pin is ~ 2.5V 
-        GPIO.setup( inPin, GPIO.OUT )
-        GPIO.output( inPin, GPIO.HIGH )
-        GPIO.setup( inPin, GPIO.IN )
-        
-        # set send Pin LOW
-        GPIO.output( outPin, GPIO.LOW ) 
+     # set receive pin HIGH briefly to charge up fully - because the while loop above will exit when pin is ~ 2.5V 
+    GPIO.setup( inPin, GPIO.OUT )
+    GPIO.output( inPin, GPIO.HIGH )
+    GPIO.setup( inPin, GPIO.IN )
+    
+    # set send Pin LOW
+    GPIO.output( outPin, GPIO.LOW ) 
 
-        # while receive pin is HIGH  AND total is less than timeout
-        while (GPIO.input(inPin)==GPIO.HIGH and total < timeout) :
-            total+=1
-        
-        if ( total >= timeout ):
-            return -2
-        else:
-            return total
+    # while receive pin is HIGH  AND total is less than timeout
+    while (GPIO.input(inPin)==GPIO.HIGH and total < timeout) :
+        total+=1
+    
+    if ( total >= timeout ):
+        return -2
+    else:
+        return total
+
+class CapReaderGroup:
+  def __init__(self, inPins=[], outPins=[], timeout=10000, treshold=100, cycles=10, verbose=False):
+    self.verbose=verbose
+    self.capReaders = []
+    self.anyTouching = Sattr(value=False, delay=1.0) # default delay of 1.0 second
+
+    for i in range(0,len(inPins)):
+      reader = CapReader(inPin=inPins[i], outPin=outPins[i], timeout=timeout, treshold=treshold, cycles=cycles)
+      self.capReaders.append(reader)
+      dispatcher.connect( self._onTouchChange, signal='Sattr::changed', sender=reader )
+
+    self.log('Created %d touch sensor readers' % len(self.touches.capReaders))
+
+  def log(self, msg):
+    if self.verbose:
+      print(msg)
+      
+  def update(self, dt):
+    count = len(self.capReaders)
+    for idx,reader in enumerate(self.capReaders):
+      if reader.update(dt):
+        self.log("Touch on pin %d (%d/%d)" % (reader.inPin, idx, count)
+
+  def _onTouchChange(self, sender):
+    for reader in self.capReaders:
+      if reader.isTouching:
+        self.anyTouching.set(value=True, immediate=True)
+        return
+
+    self.anyTouching.set(False) # delayed
 
 
 if __name__ == "__main__":

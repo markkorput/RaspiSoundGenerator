@@ -14,7 +14,7 @@ from rotary import RotaryEncoder
 from config import StrpConfig
 import time
 import RPi.GPIO as GPIO
-from touch import CapReader
+from touch import CapReader, CapReaderGroup
 import math
 
 class AppClass:
@@ -63,47 +63,28 @@ class AppClass:
     dispatcher.connect( self.handleIdleTooLong, signal='Monitor::idleTooLong', sender=dispatcher.Any )
     dispatcher.connect( self.handleActivationComplete, signal='Monitor::activationComplete', sender=dispatcher.Any )
 
-    # self.touch1 = CapReader(inPin=17, outPin=18)
-
-    self.touches = []
-    for i in range(0,len(self.config.touchInPins)):
-      self.touches.append(CapReader(inPin=self.config.touchInPins[i], outPin=self.config.touchOutPins[i]))
-
-    if self.verbose:
-      print('Created %d touch sensor readers' % len(self.touches))
-
+    self.touches = CapReaderGroup(inPins=self.config.touchInPins, outPins=self.config.touchOutPins, verbose=True)
 
     self.gain.setMax(self.monitor.idleLimit+0.1)
     self.app.run()
     self.bRightFirst = True
 
   def update(self, dt=0):
-    # self.mouse.update()
-    
-    # if self.touch1.update(): # returns True if touching
-    #   self.gain.setMax(1.0)
-    #   if self.verbose:
-    #     print("Touch")
-    # else:
-    #   self.gain.setMax(self.monitor.idleLimit+0.1)
-
-    for i in range(0, len(self.touches)):
-      touch = self.touches[i]
-      if touch.update():
-        print("Touch on pin %d" % touch.inPin)
-
-    if(self.mouse.bRight):
-      self.fileSounder.play()
-      #print('bRight')
-      #if(self.bRightFirst == True):
-      #  print('right first')
-      #  self.sounder.playOnce('audio/weedflute_mac.wav')
-    else:
-      self.bRightFirst = True
+    self.touches.update(dt)
 
     # tell the monitor how much time has elapsed and what the current gain level is,
     # it will trigger the 'Monitor::shakeItUp' signal if the gain has been too low for too long
     self.monitor.update(dt, self.gain.value)
+
+    # # mouse buttons plays sound
+    # if(self.mouse.bRight):
+    #   self.fileSounder.play()
+    #   #print('bRight')
+    #   #if(self.bRightFirst == True):
+    #   #  print('right first')
+    #   #  self.sounder.playOnce('audio/weedflute_mac.wav')
+    # else:
+    #   self.bRightFirst = True
 
     #self.gain.set(self.mouse.x)
     #self.frequency.set(self.mouse.y)
