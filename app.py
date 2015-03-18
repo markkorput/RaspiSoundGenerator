@@ -30,9 +30,9 @@ class AppClass:
 
     self.config = StrpConfig()
     
-    self.gain = sattr.Sattr(value=0.1, min=0.0, max=1.0)
+    self.gain = sattr.Sattr(value=0.0, min=0.0, max=1.0)
     self.frequency = sattr.Sattr(value=120.0, min=self.config.freqMin, max=self.config.freqMax) #min=1.0, max=2000.0)
-    print 'freq initial: %.1f' % self.frequency.value
+    self.log('freq initial: %.1f' % self.frequency.value)
     self.frequencyPos = sattr.Sattr(value = 0.0) #value=math.asin(self.frequency.value))
 
     self.sounder = sound.SineSound(frequency=self.frequency.value, gain=self.gain.value)
@@ -54,20 +54,20 @@ class AppClass:
     if self.config and self.config.rotaryA and self.config.rotaryB:
       self.rotary = RotaryEncoder(pinA=self.config.rotaryA, pinB=self.config.rotaryB, button=None, callback=self.onRotary, verbose=True)
 
+    self.monitor = monitor.ActivityMonitor(maxIdle=(3), activateDuration=(2), idleLimit=0.3)
+
+    self.touches = CapReaderGroup(inPins=self.config.touchInPins, outPins=self.config.touchOutPins, noTouchDelay=self.config.noTouchDelay, verbose=True)
+
+    self.gain.setMax(1.0) #self.monitor.idleLimit+0.1)
+
     dispatcher.connect( self.onFreqPosChange, signal='Sattr::changed', sender=self.frequencyPos )    
     dispatcher.connect( self.onFreqChange, signal='Sattr::changed', sender=self.frequency )
     dispatcher.connect( self.onGainChange, signal='Sattr::changed', sender=self.gain )
-
-    self.monitor = monitor.ActivityMonitor(maxIdle=(3), activateDuration=(2), idleLimit=0.3)
-
     dispatcher.connect( self.handleIdleTooLong, signal='Monitor::idleTooLong', sender=dispatcher.Any )
     dispatcher.connect( self.handleActivationComplete, signal='Monitor::activationComplete', sender=dispatcher.Any )
+    dispatcher.connect( self.onTouchCountChange, signal='Sattr::changed', sender=self.touches.touchCount)
 
-    self.touches = CapReaderGroup(inPins=self.config.touchInPins, outPins=self.config.touchOutPins, verbose=True)
-
-    self.gain.setMax(self.monitor.idleLimit+0.1)
     self.app.run()
-    self.bRightFirst = True
 
   def update(self, dt=0):
     self.touches.update(dt)
@@ -86,6 +86,7 @@ class AppClass:
     # else:
     #   self.bRightFirst = True
 
+
     #self.gain.set(self.mouse.x)
     #self.frequency.set(self.mouse.y)
 
@@ -100,7 +101,7 @@ class AppClass:
     GPIO.cleanup()
 
   def onFreqPosChange(self, sender):
-    print ("Freq pos: %.1f" % sender.value)
+    self.log("Freq pos: %.1f" % sender.value)
     min = self.config.freqMin
     max = self.config.freqMax
     delta = max-min
@@ -111,21 +112,21 @@ class AppClass:
 
   def onFreqChange(self, sender):
     # self.updateSound = True    
-    print ("Freq: %.1f, Gain: %.1f"  % (self.frequency.value, self.gain.value))
+    self.log("Freq: %.1f, Gain: %.1f"  % (self.frequency.value, self.gain.value))
     self.sounder.change(frequency = self.frequency.value)
 
   def onGainChange(self, sender):
-    print ("Freq: %.1f, Gain: %.1f"  % (self.frequency.value, self.gain.value))
+    self.log("Freq: %.1f, Gain: %.1f"  % (self.frequency.value, self.gain.value))
     self.sounder.setGain(self.gain.value)
 
   def handleIdleTooLong(self, sender):
     return
-    print('Starting shake-up')
+    self.log('Starting shake-up')
     self.gain.setMin(self.monitor.idleLimit)
 
   def handleActivationComplete(self, sender):
     return
-    print('Shake-up done')
+    self.log('Shake-up done')
     self.gain.setMin(0.0)
 
   def onRotary(self, event):
@@ -137,6 +138,21 @@ class AppClass:
       self.frequencyPos.set(self.frequencyPos.value - self.config.rotaryFreqPosStep)
       self.frequency.set(self.frequency.value - self.config.rotaryFreqStep)
       self.gain.set(self.gain.value - self.config.rotaryGainStep)
+
+  def onTouchCountChange(self, sender):
+    if sender.value == 0
+      # touch count just turned zero, we just lost our last touch (delay already taken into account)
+      self.gain.setMax(0.0)
+      return
+
+    if sender.prev == 0: # we just got a first touch
+      self.log('TODO: play first touch audio sample')
+      self.gain.setMin(self.config.initialActiveGainMin)
+      return
+
+  def log(self, msg):
+    if self.verbose:
+      print(msg)
 
 # end of class AppClass
 

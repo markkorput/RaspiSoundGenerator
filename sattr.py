@@ -9,6 +9,7 @@ class Sattr:
     self.value = value
     self.min = min
     self.max = max
+    self.prev = None
 
   def set(self, value):
     if self.max != None and value > self.max:
@@ -17,18 +18,22 @@ class Sattr:
     if self.min != None and value < self.min:
       value = self.min
 
-    old_value = self.value
+    self.prev = self.value
     self.value = value
 
-    if old_value != value:
+    if self.prev != value:
       dispatcher.send( signal='Sattr::changed', sender=self )
 
   def setMin(self, minVal):
     self.min = minVal
+    if self.max < self.min:
+      self.setMax(minVal)
     self.set(self.value)
 
   def setMax(self, maxVal):
     self.max = maxVal
+    if self.min > self.max:
+      self.setMin(maxVal)
     self.set(self.value)
 
 import time

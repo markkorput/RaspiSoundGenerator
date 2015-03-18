@@ -9,4 +9,7 @@ class StrpConfig:
     self.rotaryFreqPosStep = 0.1 # how much the rotary affects the frequency sine-wave affector (make negative to reverse the direction)
     self.freqMin = 100.0
     self.freqMax = 150.0
+    self.initialActiveGainMin = 0.2 # min gain on initial touch
+    self.noTouchDelay = 1.0
+
 # end of class StrpConfig

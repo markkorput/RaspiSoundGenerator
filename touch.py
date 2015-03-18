@@ -68,10 +68,10 @@ class CapReader:
         return total
 
 class CapReaderGroup:
-  def __init__(self, inPins=[], outPins=[], timeout=10000, treshold=100, cycles=10, verbose=False):
+  def __init__(self, inPins=[], outPins=[], timeout=10000, treshold=100, cycles=10, noTouchDelay=1.0, verbose=False):
     self.verbose=verbose
     self.capReaders = []
-    self.anyTouching = Sattr(value=False, delay=1.0) # default delay of 1.0 second
+    self.touchCount = Sattr(value=0, delay=noTouchDelay) # default delay of 1.0 second
 
     for i in range(0,len(inPins)):
       reader = CapReader(inPin=inPins[i], outPin=outPins[i], timeout=timeout, treshold=treshold, cycles=cycles)
@@ -91,13 +91,18 @@ class CapReaderGroup:
         self.log("Touch on pin %d (%d/%d)" % (reader.inPin, idx, count)
 
   def _onTouchChange(self, sender):
+    count = 0
+
     for reader in self.capReaders:
       if reader.isTouching:
-        self.anyTouching.set(value=True, immediate=True)
-        return
+        count += 1
 
-    self.anyTouching.set(False) # delayed
-
+    if count == 0:
+      self.touchCount.set(value=count, immediate=True)
+      return
+    
+    self.touchCount.set(0) # delayed
+      
 
 if __name__ == "__main__":
     total = 0
