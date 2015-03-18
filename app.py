@@ -140,7 +140,7 @@ class AppClass:
       self.gain.set(self.gain.value - self.config.rotaryGainStep)
 
   def onTouchCountChange(self, sender):
-    if sender.value == 0
+    if sender.value == 0:
       # touch count just turned zero, we just lost our last touch (delay already taken into account)
       self.gain.setMax(0.0)
       return
