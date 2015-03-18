@@ -98,10 +98,11 @@ class CapReaderGroup:
         count += 1
 
     if count == 0:
-      self.touchCount.set(value=count, immediate=True)
+      self.touchCount.set(0) # delayed
       return
+
+    self.touchCount.set(value=count, immediate=True)
     
-    self.touchCount.set(0) # delayed
       
 
 if __name__ == "__main__":
