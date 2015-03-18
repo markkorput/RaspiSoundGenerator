@@ -88,7 +88,7 @@ class CapReaderGroup:
     count = len(self.capReaders)
     for idx,reader in enumerate(self.capReaders):
       if reader.update(dt):
-        self.log("Touch on pin %d (%d/%d)" % (reader.inPin, idx+1, count))
+        self.log("Touch on pin %d (%d/%d, %d touches total)" % (reader.inPin, idx+1, count, self.touchCount.value))
 
   def _onTouchChange(self, sender):
     count = 0
