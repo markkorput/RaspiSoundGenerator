@@ -12,4 +12,6 @@ class StrpConfig:
     self.initialActiveGainMin = 0.2 # min gain on initial touch
     self.noTouchDelay = 1.0
 
+    self.startSounds = ['audio/sweep01.wav']
+
 # end of class StrpConfig

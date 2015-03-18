@@ -16,6 +16,7 @@ import time
 import RPi.GPIO as GPIO
 from touch import CapReader, CapReaderGroup
 import math
+import random
 
 class AppClass:
   updateSound = False
@@ -38,7 +39,10 @@ class AppClass:
     self.sounder = sound.SineSound(frequency=self.frequency.value, gain=self.gain.value)
     self.sounder.start()
 
-    self.fileSounder = sound.FileSound(path='audio/sweep01.wav', gain=0.3)
+    #self.fileSounder = sound.FileSound(path='audio/sweep01.wav', gain=0.3)
+    self.fileSounders = []
+    for startSound in self.config.startSounds:
+      self.fileSounders.append(sound.FileSound(path=startSound, gain=0.3))
 
     self.mouse = mouse.MouseFileReader()
     # self.mouse.xSensitivity = 0.001
@@ -75,17 +79,6 @@ class AppClass:
     # tell the monitor how much time has elapsed and what the current gain level is,
     # it will trigger the 'Monitor::shakeItUp' signal if the gain has been too low for too long
     self.monitor.update(dt, self.gain.value)
-
-    # # mouse buttons plays sound
-    # if(self.mouse.bRight):
-    #   self.fileSounder.play()
-    #   #print('bRight')
-    #   #if(self.bRightFirst == True):
-    #   #  print('right first')
-    #   #  self.sounder.playOnce('audio/weedflute_mac.wav')
-    # else:
-    #   self.bRightFirst = True
-
 
     #self.gain.set(self.mouse.x)
     #self.frequency.set(self.mouse.y)
@@ -149,6 +142,12 @@ class AppClass:
 
     if sender.prev == 0: # we just got a first touch
       self.log('TODO: play first touch audio sample')
+
+      # self.fileSounder.play()
+      if len(self.fileSounders) > 0:
+        random.choice(self.fileSounders).play()
+      #  self.sounder.playOnce('audio/weedflute_mac.wav')
+
       # self.gain.setMin(self.config.initialActiveGainMin)
       self.gain.set(self.config.initialActiveGainMin)
       return
