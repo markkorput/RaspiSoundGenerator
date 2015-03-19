@@ -60,7 +60,7 @@ class AppClass:
     if self.config and self.config.rotaryA and self.config.rotaryB:
       self.rotary = RotaryEncoder(pinA=self.config.rotaryA, pinB=self.config.rotaryB, button=None, callback=self.onRotary, verbose=True)
 
-    self.monitor = monitor.ActivityMonitor(maxIdle=(3), activateDuration=(2), idleLimit=0.3)
+    self.monitor = monitor.ActivityMonitor(maxIdle=self.config.maxIdle, activateDuration=self.config.activateDuration, idleLimit=self.config.idleLimit)
     self.touches = CapReaderGroup(inPins=self.config.touchInPins, outPins=self.config.touchOutPins, noTouchDelay=self.config.noTouchDelay, verbose=True)
     self.activityTimer = Timer(duration=self.config.maxInteraction, verbose=True)
     self.forcedIdleTimer = Timer(duration=self.config.minIdle, verbose=True)
@@ -173,6 +173,7 @@ class AppClass:
     self.log('STATUS: %s' % sender.value)
     if sender.value == 'interactive':
       self.activityTimer.start()
+      self.log('starting timer (%s to %s)' % (sender.prev, sender.value))
     else:
       self.activityTimer.stop()
 
