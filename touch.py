@@ -107,6 +107,8 @@ class CapReaderGroup:
 
     if count == 0:
       self.touchCount.set(0) # delayed
+    elif count > 1:
+      self.touchCount.set(value=count, customDelay=0.2)  
     else:
       self.touchCount.set(value=count, immediate=True)
 
