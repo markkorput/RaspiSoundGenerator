@@ -58,7 +58,7 @@ class AppClass:
     self.touches = CapReaderGroup(inPins=self.config.touchInPins, outPins=self.config.touchOutPins, noTouchDelay=self.config.noTouchDelay, verbose=True)
     self.activityTimer = Timer(duration=self.config.maxInteraction, verbose=True)
     self.forcedIdleTimer = Timer(duration=self.config.minIdle, verbose=True)
-    self.gain.setMax(1.0) #self.monitor.idleLimit+0.1)
+    self.gain.setMax(self.config.activeMaxGain) #self.monitor.idleLimit+0.1)
 
     dispatcher.connect( self.onPosChange, signal='Sattr::changed', sender=self.position )
     dispatcher.connect( self.onFreqChange, signal='Sattr::changed', sender=self.frequency )
@@ -152,15 +152,17 @@ class AppClass:
       return # ignore touches during forced idle
 
     if sender.value == 0:
-      self.log("Lost capacitive control")
+      self.log("lost capacitive control")
       # touch count just turned zero, we just lost our last touch (delay already taken into account)
       # self.gain.setMax(0.0)
       if self.status.value == 'interactive':
         self.log('zero gain')
+        self.gain.setMin(0.0)
         self.gain.animateTo(0.0)
         for fileSounder in self.fileSounders:
           fileSounder.stop()
         self.status.set('idle')
+        self.position.set(0.0)
 
       return
 
@@ -169,19 +171,20 @@ class AppClass:
     if sender.prev == 0: 
       self.log('first touch')
       self.status.set('interactive')
+      self.gain.setMin(self.config.activeMinGain)
+      self.gain.setMax(self.config.activeMaxGain)
 
       # self.fileSounder.play()
       if len(self.fileSounders) > 0:
         self.log('playing sweep')
         # random.choice(self.fileSounders).play()
-        #  self.sounder.playOnce('audio/weedflute_mac.wav')
       
       self.log('setting initial gain')
       # self.gain.setMin(self.config.initialActiveGainMin)
       self.gain.animateTo(self.config.initialActiveGainMin)
       self.frequency.set(self.config.touchFreqs[sender.value])
       return
-
+    self.log('count: %d, %d' % (sender.value, self.config.touchFreqs[sender.value]))
     #self.log('proportional gain')
     #self.gain.animateTo(sender.value * 1.0 / len(self.touches.capReaders))
     self.frequency.set(self.config.touchFreqs[sender.value])

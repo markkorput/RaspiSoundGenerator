@@ -15,6 +15,7 @@ class SineSound:
     pg.mixer.pre_init(self.samplerate, -self.bits, self.channels)
     pg.init()
     self.channel = pg.mixer.Channel(0)
+    self.channel.set_volume(1.0)
     self._recording = False
     self.recorder = None
 
@@ -35,7 +36,7 @@ class SineSound:
     self.sound = newSound
     #self.sound.play(-1)
 
-  def mkSine(self, freq=1000, peak=0.1, samplerate=44100, nchannels=1):
+  def mkSine(self, freq=1000, peak=1.0, samplerate=44100, nchannels=1):
     wavelen = 0.0
     if( freq != 0.0 ):
       wavelen = 1.0/freq
@@ -48,6 +49,7 @@ class SineSound:
 
     sound = pg.sndarray.make_sound(samples)
     sound.set_volume(self.gain)
+    # print 'set to freq: %.2f, gain: %.2f' % (freq, self.gain)
     return sound
 
 
