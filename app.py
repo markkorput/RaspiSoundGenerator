@@ -112,6 +112,7 @@ class AppClass:
       # position is a frequency affector; its value traverse a sine wave
       # which is used to calculate new frequency values, based on the configure
       # minimum and maximum frequencies
+      self.log('affecting gain: %d,%d,%d' % (min, max, delta))
       self.gain.set(min + delta * (math.sin(sender.value) * 0.5 + 0.5))
 
   def onFreqChange(self, sender):
@@ -125,7 +126,7 @@ class AppClass:
   def handleIdleTooLong(self, sender):
     if self.status.value == 'idle':
       self.status.set('mixing')
-      self.mixSound.play()
+      # self.mixSound.play()
       self.gain.animateTo(0.0) # turn wave of during mixing, we're using an audio file instead
       # self.gain.setMin(self.monitor.idleLimit)
       # self.gain.animateTo(self.config.activateGain)
@@ -167,21 +168,25 @@ class AppClass:
     # (don't interrupt the mixing procedure... or should be?)
     if sender.prev == 0: 
       self.log('first touch')
+      self.status.set('interactive')
 
       # self.fileSounder.play()
       if len(self.fileSounders) > 0:
         self.log('playing sweep')
-        random.choice(self.fileSounders).play()
-        self.status.set('interactive')
+        # random.choice(self.fileSounders).play()
         #  self.sounder.playOnce('audio/weedflute_mac.wav')
-
+      
       self.log('setting initial gain')
       # self.gain.setMin(self.config.initialActiveGainMin)
       self.gain.animateTo(self.config.initialActiveGainMin)
+      self.frequency.set(self.config.touchFreqs[sender.value])
       return
 
-    self.log('proportional gain')
-    self.gain.animateTo(sender.value * 1.0 / len(self.touches.capReaders))
+    #self.log('proportional gain')
+    #self.gain.animateTo(sender.value * 1.0 / len(self.touches.capReaders))
+    self.frequency.set(self.config.touchFreqs[sender.value])
+
+
 
   def onStatusChange(self, sender):
     self.log('STATUS: %s' % sender.value)

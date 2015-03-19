@@ -7,14 +7,15 @@ class StrpConfig:
     self.rotaryFreqStep = 0.0 # how much the rotary affects frequency (make negative to reverse the direction)
     self.rotaryGainStep = 0.0 # how much the rotary affects the gain (make negative to reverse the direction)
     self.rotaryPosStep = 0.1 # how much the rotary affects the frequency sine-wave affector (make negative to reverse the direction)
-    self.posAffectGain = False
-    self.posAffectFreq = True
+    self.posAffectGain = True
+    self.posAffectFreq = False
+    self.touchFreqs = [130.0, 130.0, 110.0, 120.0, 140.0,  130.0, 130.0,130.0,130.0]
     self.freqMin = 100.0
     self.freqMax = 150.0
     self.defaultFreq = 130.0
-    self.initialActiveGainMin = 0.25 # min gain on initial touch
+    self.initialActiveGainMin = 0.50 # min gain on initial touch
     self.noTouchDelay = 1.0
-    self.startSounds = ['audio/sweep01.wav']
+    self.startSounds = [] # ['audio/sweep01.wav']
     # max interaction
     self.maxInteraction = 60.0
     self.minIdle = 5.0 # time of enforced idle after max activity
