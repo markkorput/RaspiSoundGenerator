@@ -7,6 +7,8 @@ class StrpConfig:
     self.rotaryFreqStep = 0.0 # how much the rotary affects frequency (make negative to reverse the direction)
     self.rotaryGainStep = 0.0 # how much the rotary affects the gain (make negative to reverse the direction)
     self.rotaryPosStep = 0.1 # how much the rotary affects the frequency sine-wave affector (make negative to reverse the direction)
+    self.posAffectGain = False
+    self.posAffectFreq = True
     self.freqMin = 100.0
     self.freqMax = 150.0
     self.defaultFreq = 130.0

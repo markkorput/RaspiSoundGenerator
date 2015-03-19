@@ -95,13 +95,24 @@ class AppClass:
 
   def onPosChange(self, sender):
     self.log("Freq pos: %.1f" % sender.value)
-    min = self.config.freqMin
-    max = self.config.freqMax
-    delta = max-min
-    # position is a frequency affector; its value traverse a sine wave
-    # which is used to calculate new frequency values, based on the configure
-    # minimum and maximum frequencies
-    self.frequency.set(min + delta * (math.sin(sender.value) * 0.5 + 0.5))
+
+    if self.config.posAffectFreq:
+      min = self.config.freqMin
+      max = self.config.freqMax
+      delta = max-min
+      # position is a frequency affector; its value traverse a sine wave
+      # which is used to calculate new frequency values, based on the configure
+      # minimum and maximum frequencies
+      self.frequency.set(min + delta * (math.sin(sender.value) * 0.5 + 0.5))
+
+    if self.config.posAffectGain and self.status.value == 'interactive':
+      min = self.gain.min
+      max = self.gain.max
+      delta = max-min
+      # position is a frequency affector; its value traverse a sine wave
+      # which is used to calculate new frequency values, based on the configure
+      # minimum and maximum frequencies
+      self.gain.set(min + delta * (math.sin(sender.value) * 0.5 + 0.5))
 
   def onFreqChange(self, sender):
     self.log("Freq: %.1f, Gain: %.1f"  % (self.frequency.value, self.gain.value))
@@ -127,11 +138,11 @@ class AppClass:
 
   def onRotary(self, event):
     if event == RotaryEncoder.CLOCKWISE:
-      self.position.set(self.position.value + self.config.rotaryFreqPosStep)
+      self.position.set(self.position.value + self.config.rotaryPosStep)
       self.frequency.set(self.frequency.value + self.config.rotaryFreqStep)
       self.gain.set(self.gain.value + self.config.rotaryGainStep)
     elif event == RotaryEncoder.ANTICLOCKWISE:
-      self.position.set(self.position.value - self.config.rotaryFreqPosStep)
+      self.position.set(self.position.value - self.config.rotaryPosStep)
       self.frequency.set(self.frequency.value - self.config.rotaryFreqStep)
       self.gain.set(self.gain.value - self.config.rotaryGainStep)
 
