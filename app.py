@@ -59,6 +59,10 @@ class AppClass:
     self.activityTimer = Timer(duration=self.config.maxInteraction, verbose=True)
     self.forcedIdleTimer = Timer(duration=self.config.minIdle, verbose=True)
     self.gain.setMax(self.config.activeMaxGain) #self.monitor.idleLimit+0.1)
+    self.freqAffectorTimer = Timer()
+    self.freqAffectorTimer.start()
+    self.touchDelay = Timer(duration=0.1)
+    self.touchDelay.start()
 
     dispatcher.connect( self.onPosChange, signal='Sattr::changed', sender=self.position )
     dispatcher.connect( self.onFreqChange, signal='Sattr::changed', sender=self.frequency )
@@ -74,7 +78,11 @@ class AppClass:
     self.status.set('idle')
 
   def update(self, dt=0.0):
-    self.touches.update(dt)
+    self.touchDelay.update(dt)
+    if self.touchDelay.running == False:
+      self.touches.update(dt)
+      self.touchDelay.start()
+
     self.gain.update(dt)
     self.activityTimer.update(dt) 
     self.forcedIdleTimer.update(dt)
@@ -88,6 +96,7 @@ class AppClass:
       monitorValue = self.monitor.idleLimit + 0.1
 
     self.monitor.update(dt, monitorValue)
+    self.freqAffectorTimer.update(dt)
 
   def destroy(self):
     self.app.close()
@@ -116,8 +125,11 @@ class AppClass:
       self.gain.set(min + delta * (math.sin(sender.value) * 0.5 + 0.5))
 
   def onFreqChange(self, sender):
-    self.log("Freq: %.1f, Gain: %.1f"  % (self.frequency.value, self.gain.value))
-    self.sounder.change(frequency = self.frequency.value)
+    affectorValue = math.sin(self.freqAffectorTimer.time() * self.config.affectorSpeed) * self.config.affectorAmp
+    freq = self.frequency.value + affectorValue
+    self.log("Freq: %.1f, Gain: %.1f"  % (freq, self.gain.value))
+    self.sounder.change(frequency = freq)
+    self.log(random.choice(self.sounder.ascii))
 
   def onGainChange(self, sender):
     self.log("Freq: %.1f, Gain: %.1f"  % (self.frequency.value, self.gain.value))
@@ -181,11 +193,12 @@ class AppClass:
       self.log('setting initial gain')
       # self.gain.setMin(self.config.initialActiveGainMin)
       self.gain.animateTo(self.config.initialActiveGainMin)
-      self.frequency.set(self.config.touchFreqs[sender.value])
-      return
+      #self.frequency.set(self.config.touchFreqs[sender.value])
+      #return
 
     #self.log('proportional gain')
     #self.gain.animateTo(sender.value * 1.0 / len(self.touches.capReaders))
+    
     self.frequency.set(self.config.touchFreqs[sender.value])
 
 

@@ -27,5 +27,7 @@ class StrpConfig:
     self.idleLimit = 0.2 # minimum gain level at which fluids stay mixed
     self.activeMinGain = 0.5
     self.activeMaxGain = 1.3
+    self.affectorAmp = 10.0
+    self.affectorSpeed = 0.1
 
 # end of class StrpConfig
