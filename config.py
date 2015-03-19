@@ -9,7 +9,7 @@ class StrpConfig:
     self.rotaryPosStep = 0.1 # how much the rotary affects the frequency sine-wave affector (make negative to reverse the direction)
     self.posAffectGain = True
     self.posAffectFreq = False
-    self.touchFreqs = [100.0, 100.0, 70.0, 130.0, 200.0, 60.0]# [130.0, 130.0, 110.0, 120.0, 140.0,  130.0, 130.0,130.0,130.0]
+    self.touchFreqs = [100.0, 100.0, 70.0, 130.0, 55.0, 60.0]# [130.0, 130.0, 110.0, 120.0, 140.0,  130.0, 130.0,130.0,130.0]
     self.freqMin = 50.0
     self.freqMax = 150.0
     self.defaultFreq = 100.0

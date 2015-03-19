@@ -78,10 +78,11 @@ class AppClass:
     self.status.set('idle')
 
   def update(self, dt=0.0):
-    self.touchDelay.update(dt)
-    if self.touchDelay.running == False:
-      self.touches.update(dt)
-      self.touchDelay.start()
+    #self.touchDelay.update(dt)
+    #if self.touchDelay.running == False:
+    #  self.touches.update(dt)
+    #  self.touchDelay.start()
+    self.touches.update(dt)
 
     self.gain.update(dt)
     self.activityTimer.update(dt) 
@@ -125,6 +126,10 @@ class AppClass:
       self.gain.set(min + delta * (math.sin(sender.value) * 0.5 + 0.5))
 
   def onFreqChange(self, sender):
+    # if self.touchDelay.running == True:
+    #   return
+    # self.touchDelay.start()
+
     affectorValue = math.sin(self.freqAffectorTimer.time() * self.config.affectorSpeed) * self.config.affectorAmp
     freq = self.frequency.value + affectorValue
     self.log("Freq: %.1f, Gain: %.1f"  % (freq, self.gain.value))
@@ -139,7 +144,8 @@ class AppClass:
     if self.status.value == 'idle':
       self.status.set('mixing')
       # self.mixSound.play()
-      self.gain.animateTo(0.0) # turn wave of during mixing, we're using an audio file instead
+      #self.gain.animateTo(0.0) # turn wave of during mixing, we're using an audio file instead
+      self.gain.animateTo(self.config.activateGain, self.config.activateDuration*0.75)
       # self.gain.setMin(self.monitor.idleLimit)
       # self.gain.animateTo(self.config.activateGain)
 
