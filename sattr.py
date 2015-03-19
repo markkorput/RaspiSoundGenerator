@@ -1,4 +1,5 @@
 from pydispatch import dispatcher
+import time
 
 class Sattr:
   """Super-attribute"""
@@ -10,6 +11,11 @@ class Sattr:
     self.min = min
     self.max = max
     self.prev = None
+    # animate
+    self.fromVal = None
+    self.toVal = None
+    self.startTime = None
+    self.duration = None
 
   def set(self, value):
     if self.max != None and value > self.max:
@@ -36,6 +42,25 @@ class Sattr:
       self.setMin(maxVal)
     self.set(self.value)
 
+  def animateTo(self, toVal, duration=0.3):
+    self.toVal = toVal
+    self.fromVal = self.value
+    self.duration = duration
+    self.timer = 0.0
+
+  def update(self, dt):
+    if self.toVal == None:
+      return
+
+    self.timer += dt
+    if self.timer >= self.duration:
+      self.set(self.toVal)
+      self.toVal = None # done
+      return
+
+    dv = self.toVal - self.fromVal
+    self.set(self.fromVal + dv * self.timer / self.duration)
+
 import time
 
 class DelaySattr(Sattr):
@@ -46,13 +71,17 @@ class DelaySattr(Sattr):
     self.timeToChange=-1.0
     self.changeValue=None
 
-  def set(self, value=True, immediate=False):
+  def set(self, value=True, immediate=False, customDelay=None):
     if immediate == True:
       Sattr.set(self, value)
       self.changeValue = None # cancel any pending changes
       return
 
-    self.timeToChange = self.delay
+    if customDelay == None:
+      self.timeToChange = self.delay
+    else:
+      self.timeToChange = customDelay
+
     self.changeValue = value
 
   def update(self, dt):
@@ -62,6 +91,7 @@ class DelaySattr(Sattr):
     self.timeToChange -= dt
     if self.timeToChange <= 0:
       self.set(value=self.changeValue, immediate=True) # this reset changeValue
+
 
 if __name__ == "__main__":
 

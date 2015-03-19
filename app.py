@@ -79,6 +79,7 @@ class AppClass:
 
   def update(self, dt=0.0):
     self.touches.update(dt)
+    self.gain.update(dt)
 
     # tell the monitor how much time has elapsed and what the current gain level is,
     # it will trigger the 'Monitor::shakeItUp' signal if the gain has been too low for too long
@@ -120,13 +121,13 @@ class AppClass:
     if self.status.value == 'idle':
       self.status.set('mixing')
       # self.gain.setMin(self.monitor.idleLimit)
-      self.gain.set(self.monitor.idleLimit)
+      self.gain.animateTo(self.monitor.idleLimit)
 
   def handleActivationComplete(self, sender):
     if self.status.value == 'mixing':
       self.log('mixing done')
       self.status.set('idle')
-      self.gain.set(0.0)
+      self.gain.animateTo(0.0)
 
   def onRotary(self, event):
     if event == RotaryEncoder.CLOCKWISE:
@@ -145,7 +146,7 @@ class AppClass:
       # self.gain.setMax(0.0)
       if self.status.value == 'interactive':
         self.log('zero gain')
-        self.gain.set(0.0)
+        self.gain.animateTo(0.0)
         for fileSounder in self.fileSounders:
           fileSounder.stop()
         self.status.set('idle')
@@ -166,11 +167,11 @@ class AppClass:
 
       self.log('setting initial gain')
       # self.gain.setMin(self.config.initialActiveGainMin)
-      self.gain.set(self.config.initialActiveGainMin)
+      self.gain.animateTo(self.config.initialActiveGainMin)
       return
 
     self.log('proportional gain')
-    self.gain.set(sender.value * 1.0 / len(self.touches.capReaders))
+    self.gain.animateTo(sender.value * 1.0 / len(self.touches.capReaders))
 
   def onStatusChange(self, sender):
     self.log('STATUS: %s' % sender.value)
