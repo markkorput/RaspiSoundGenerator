@@ -199,13 +199,18 @@ class AppClass:
       self.log('setting initial gain')
       # self.gain.setMin(self.config.initialActiveGainMin)
       self.gain.animateTo(self.config.initialActiveGainMin)
+      self.position.set(0.0)
       #self.frequency.set(self.config.touchFreqs[sender.value])
       #return
 
     #self.log('proportional gain')
     #self.gain.animateTo(sender.value * 1.0 / len(self.touches.capReaders))
-    
-    self.frequency.set(self.config.touchFreqs[sender.value])
+    val = 0
+    for i in range(0,len(self.touches.capReaders)):
+      if self.touches.capReaders[i].isTouching.value:
+        val += (1 << i)
+    self.log('touch val: %d' % val)
+    self.frequency.set(self.config.touchFreqs[val]) #sender.value])
 
 
 
