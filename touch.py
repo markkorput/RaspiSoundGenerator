@@ -70,7 +70,7 @@ class CapReader:
         return total
 
 class CapReaderGroup:
-  def __init__(self, inPins=[], outPins=[], timeout=10000, treshold=100, cycles=10, noTouchDelay=1.0, verbose=False):
+  def __init__(self, inPins=[], outPins=[], timeout=10000, treshold=75, cycles=10, noTouchDelay=1.0, verbose=False):
     self.verbose=verbose
     self.capReaders = []
     self.touchCount = DelaySattr(value=0, delay=noTouchDelay) # default delay of 1.0 second
