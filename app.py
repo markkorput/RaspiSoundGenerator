@@ -40,11 +40,11 @@ class AppClass:
     self.sounder = sound.SineSound(frequency=self.frequency.value, gain=self.gain.value)
     self.sounder.start()
 
-    #self.fileSounder = sound.FileSound(path='audio/sweep01.wav', gain=0.3)
-    self.fileSounders = []
-    for startSound in self.config.startSounds:
-      self.fileSounders.append(sound.FileSound(path=startSound, gain=0.3, verbose=True))
-    self.mixSound = sound.FileSound(path=self.config.mixingAudio, gain=1.0, verbose=True)
+    # #self.fileSounder = sound.FileSound(path='audio/sweep01.wav', gain=0.3)
+    # self.fileSounders = []
+    # for startSound in self.config.startSounds:
+    #   self.fileSounders.append(sound.FileSound(path=startSound, gain=0.3, verbose=True))
+    # # self.mixSound = sound.FileSound(path=self.config.mixingAudio, gain=1.0, verbose=True)
 
     # config GPIOs (used by rotary input)
     GPIO.setmode(GPIO.BCM)
@@ -159,10 +159,9 @@ class AppClass:
         self.log('zero gain')
         self.gain.setMin(0.0)
         self.gain.animateTo(0.0)
-        for fileSounder in self.fileSounders:
-          fileSounder.stop()
+        # for fileSounder in self.fileSounders:
+        #   fileSounder.stop()
         self.status.set('idle')
-        self.position.set(0.0)
 
       return
 
@@ -174,17 +173,17 @@ class AppClass:
       self.gain.setMin(self.config.activeMinGain)
       self.gain.setMax(self.config.activeMaxGain)
 
-      # self.fileSounder.play()
-      if len(self.fileSounders) > 0:
-        self.log('playing sweep')
-        # random.choice(self.fileSounders).play()
+      # # self.fileSounder.play()
+      # if len(self.fileSounders) > 0:
+      #   self.log('playing sweep')
+      #   # random.choice(self.fileSounders).play()
       
       self.log('setting initial gain')
       # self.gain.setMin(self.config.initialActiveGainMin)
       self.gain.animateTo(self.config.initialActiveGainMin)
       self.frequency.set(self.config.touchFreqs[sender.value])
       return
-    self.log('count: %d, %d' % (sender.value, self.config.touchFreqs[sender.value]))
+
     #self.log('proportional gain')
     #self.gain.animateTo(sender.value * 1.0 / len(self.touches.capReaders))
     self.frequency.set(self.config.touchFreqs[sender.value])
@@ -202,8 +201,8 @@ class AppClass:
     if sender.value == 'idle':
       self.frequency.set(self.config.defaultFreq)
 
-    if sender.value != 'mixing':
-      self.mixSound.stop()
+    # if sender.value != 'mixing':
+    #   self.mixSound.stop()
 
   def onMaxActivity(self, sender):
     self.log('zeroing gain')
