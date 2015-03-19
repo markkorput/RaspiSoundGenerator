@@ -45,6 +45,7 @@ class AppClass:
     self.fileSounders = []
     for startSound in self.config.startSounds:
       self.fileSounders.append(sound.FileSound(path=startSound, gain=0.3, verbose=True))
+    self.mixSound = sound.FileSound(path=self.config.activateSound, gain=1.0, verbose=True)
 
     self.mouse = mouse.MouseFileReader()
     # self.mouse.xSensitivity = 0.001
@@ -113,8 +114,10 @@ class AppClass:
   def handleIdleTooLong(self, sender):
     if self.status.value == 'idle':
       self.status.set('mixing')
+      self.mixSound.play()
+
       # self.gain.setMin(self.monitor.idleLimit)
-      self.gain.animateTo(self.monitor.idleLimit)
+      self.gain.animateTo(self.config.activateGain)
 
   def handleActivationComplete(self, sender):
     if self.status.value == 'mixing':

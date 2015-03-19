@@ -12,10 +12,14 @@ class StrpConfig:
     self.initialActiveGainMin = 0.25 # min gain on initial touch
     self.noTouchDelay = 1.0
     self.startSounds = ['audio/sweep01.wav']
+    # max interaction
     self.maxInteraction = 60.0
     self.minIdle = 5.0 # time of enforced idle after max activity
+    # monitor
     self.maxIdle = 400.0 # time the fluids are allowed to lay idle
     self.activateDuration = 90.0
+    self.activateSound = 'audio/mixStart.wav'
+    self.activateGain = 0.8
     self.idleLimit = 0.2 # minimum gain level at which fluids stay mixed
 
 
