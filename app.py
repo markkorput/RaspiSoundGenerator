@@ -31,6 +31,8 @@ class AppClass:
 
     self.config = StrpConfig()
     
+    self.status = sattr.Sattr(value='loading')
+
     self.gain = sattr.Sattr(value=0.0, min=0.0, max=1.0)
     self.frequency = sattr.Sattr(value=120.0, min=self.config.freqMin, max=self.config.freqMax) #min=1.0, max=2000.0)
     self.log('freq initial: %.1f' % self.frequency.value)
@@ -42,7 +44,7 @@ class AppClass:
     #self.fileSounder = sound.FileSound(path='audio/sweep01.wav', gain=0.3)
     self.fileSounders = []
     for startSound in self.config.startSounds:
-      self.fileSounders.append(sound.FileSound(path=startSound, gain=0.3))
+      self.fileSounders.append(sound.FileSound(path=startSound, gain=0.3, verbose=True))
 
     self.mouse = mouse.MouseFileReader()
     # self.mouse.xSensitivity = 0.001
@@ -64,16 +66,18 @@ class AppClass:
 
     self.gain.setMax(1.0) #self.monitor.idleLimit+0.1)
 
-    dispatcher.connect( self.onFreqPosChange, signal='Sattr::changed', sender=self.frequencyPos )    
+    dispatcher.connect( self.onFreqPosChange, signal='Sattr::changed', sender=self.frequencyPos )
     dispatcher.connect( self.onFreqChange, signal='Sattr::changed', sender=self.frequency )
     dispatcher.connect( self.onGainChange, signal='Sattr::changed', sender=self.gain )
     dispatcher.connect( self.handleIdleTooLong, signal='Monitor::idleTooLong', sender=dispatcher.Any )
     dispatcher.connect( self.handleActivationComplete, signal='Monitor::activationComplete', sender=dispatcher.Any )
     dispatcher.connect( self.onTouchCountChange, signal='Sattr::changed', sender=self.touches.touchCount)
+    dispatcher.connect( self.onStatusChange, signal='Sattr::changed', sender=self.status )
 
     self.app.run()
+    self.status.set('idle')
 
-  def update(self, dt=0):
+  def update(self, dt=0.0):
     self.touches.update(dt)
 
     # tell the monitor how much time has elapsed and what the current gain level is,
@@ -113,14 +117,16 @@ class AppClass:
     self.sounder.setGain(self.gain.value)
 
   def handleIdleTooLong(self, sender):
-    return
-    self.log('Starting shake-up')
-    self.gain.setMin(self.monitor.idleLimit)
+    if self.status.value == 'idle':
+      self.status.set('mixing')
+      # self.gain.setMin(self.monitor.idleLimit)
+      self.gain.set(self.monitor.idleLimit)
 
   def handleActivationComplete(self, sender):
-    return
-    self.log('Shake-up done')
-    self.gain.setMin(0.0)
+    if self.status.value == 'mixing':
+      self.log('mixing done')
+      self.status.set('idle')
+      self.gain.set(0.0)
 
   def onRotary(self, event):
     if event == RotaryEncoder.CLOCKWISE:
@@ -134,25 +140,40 @@ class AppClass:
 
   def onTouchCountChange(self, sender):
     if sender.value == 0:
-      self.log("Lost capacitive control, zero gain")
+      self.log("Lost capacitive control")
       # touch count just turned zero, we just lost our last touch (delay already taken into account)
       # self.gain.setMax(0.0)
-      self.gain.set(0.0)
+      if self.status.value == 'interactive':
+        self.log('zero gain')
+        self.gain.set(0.0)
+        for fileSounder in self.fileSounders:
+          fileSounder.stop()
+        self.status.set('idle')
+
       return
 
-    if sender.prev == 0: # we just got a first touch
-      self.log('TODO: play first touch audio sample')
+    # we just got a first touch, don't do anything unless we're idle
+    # (don't interrupt the mixing procedure... or should be?)
+    if sender.prev == 0: 
+      self.log('first touch')
 
       # self.fileSounder.play()
       if len(self.fileSounders) > 0:
+        self.log('playing sweep')
         random.choice(self.fileSounders).play()
-      #  self.sounder.playOnce('audio/weedflute_mac.wav')
+        self.status.set('interactive')
+        #  self.sounder.playOnce('audio/weedflute_mac.wav')
 
+      self.log('setting initial gain')
       # self.gain.setMin(self.config.initialActiveGainMin)
       self.gain.set(self.config.initialActiveGainMin)
       return
 
+    self.log('proportional gain')
     self.gain.set(sender.value * 1.0 / len(self.touches.capReaders))
+
+  def onStatusChange(self, sender):
+    self.log('STATUS: %s' % sender.value)
 
   def log(self, msg):
     if self.verbose:

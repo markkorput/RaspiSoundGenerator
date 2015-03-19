@@ -71,7 +71,8 @@ class SineSound:
     self.sound.play()
 
 class FileSound:
-  def __init__(self, path=None, gain=0.3):
+  def __init__(self, path=None, gain=0.3, verbose=False):
+    self.verbose = verbose
     self.path = path
     self.sound = None
     self.channel = pg.mixer.Channel(1)
@@ -88,8 +89,17 @@ class FileSound:
     self.channel.play(self.sound)   
     #self.sound.play() # default: once
 
+  def stop(self):
+    if self.channel.get_busy():
+      self.log('FileSound: stopping')
+
+    self.channel.stop()
+
   def isPlaying(self):
     # if(self.sound == None):
     #  return False
     return self.channel.get_busy() #pg.mixer.get_busy()
 
+  def log(self, msg):
+    if self.verbose:
+      print(msg)

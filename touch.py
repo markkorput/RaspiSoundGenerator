@@ -11,21 +11,23 @@ class CapReader:
     self.timeout = timeout
     self.cycles = cycles
     self.treshold = treshold
-    self.isTouching = Sattr(value=False)
+    self.isTouching = Sattr(value=False) #DelaySattr(value=False, delay=0.1)
     self.totalValue = 0
 
   def read(self):
     return self._CapRead(self.inPin, self.outPin, self.timeout)
 
   def update(self, dt=0.0):
+    # self.isTouching.update(dt)
+
     self.totalValue = 0
     for j in range(0, self.cycles):
       self.totalValue += self._CapRead(self.inPin, self.outPin, self.timeout) # self.read()
       if self.totalValue >= self.treshold:
-        self.isTouching.set(True)
+        self.isTouching.set(True) #(value=True, immediate=True)
         return True
 
-    self.isTouching.set(False)
+    self.isTouching.set(False) #(value=False, immediate=False) # delayed
     return False
 
   def _CapRead(self, inPin=17,outPin=18, timeout=10000):
@@ -87,10 +89,14 @@ class CapReaderGroup:
   def update(self, dt):
     self.touchCount.update(dt)
 
+    for reader in self.capReaders:
+      reader.update(dt)
     count = len(self.capReaders)
     for idx,reader in enumerate(self.capReaders):
-      if reader.update(dt):
-        self.log("Touch on pin %d (%d/%d, %d touches total)" % (reader.inPin, idx+1, count, self.touchCount.value))
+      reader.update(dt)
+      # prev = reader.isTouching.value
+      # if reader.isTouching.value and not reader.isTouching.prev:
+      #   self.log("Touch on pin %d (%d/%d, %d touches total)" % (reader.inPin, idx+1, count, self.touchCount.value))
 
   def _onTouchChange(self, sender):
     count = 0
@@ -101,10 +107,10 @@ class CapReaderGroup:
 
     if count == 0:
       self.touchCount.set(0) # delayed
-      return
+    else:
+      self.touchCount.set(value=count, immediate=True)
 
-    self.touchCount.set(value=count, immediate=True)
-    
+    # self.log('Touch count: %d/%d' % (self.touchCount.value, len(self.capReaders)))
       
 
 if __name__ == "__main__":

@@ -17,7 +17,8 @@ class ActivityEpisode:
 
 
 class ActivityMonitor:
-  def __init__(self, maxIdle=3, activateDuration=2, idleLimit=1):
+  def __init__(self, maxIdle=3, activateDuration=2, idleLimit=1, verbose=False):
+    self.verbose = verbose
     self.maxIdle = maxIdle
     self.activateDuration = activateDuration
     self.idleLimit = idleLimit
@@ -57,3 +58,6 @@ class ActivityMonitor:
       while len(self.episodes > 90):
         self.episodes.pop(0)
 
+  def log(self, msg):
+    if self.verbose:
+      print(msg)
