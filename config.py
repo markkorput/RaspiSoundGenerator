@@ -9,6 +9,7 @@ class StrpConfig:
     self.rotaryFreqPosStep = 0.1 # how much the rotary affects the frequency sine-wave affector (make negative to reverse the direction)
     self.freqMin = 100.0
     self.freqMax = 150.0
+    self.defaultFreq = 130.0
     self.initialActiveGainMin = 0.25 # min gain on initial touch
     self.noTouchDelay = 1.0
     self.startSounds = ['audio/sweep01.wav']
@@ -18,7 +19,7 @@ class StrpConfig:
     # monitor
     self.maxIdle = 400.0 # time the fluids are allowed to lay idle
     self.activateDuration = 90.0
-    self.activateSound = 'audio/mixStart.wav'
+    self.mixingAudio = 'audio/mixSoundtrack.wav'
     self.activateGain = 0.8
     self.idleLimit = 0.2 # minimum gain level at which fluids stay mixed
 

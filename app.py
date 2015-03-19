@@ -7,7 +7,6 @@ import numpy as np
 from pydispatch import dispatcher
 
 import sound
-import mouse
 import sattr
 import monitor
 from rotary import RotaryEncoder
@@ -34,7 +33,7 @@ class AppClass:
     self.status = sattr.Sattr(value='loading')
 
     self.gain = sattr.Sattr(value=0.0, min=0.0, max=1.0)
-    self.frequency = sattr.Sattr(value=120.0, min=self.config.freqMin, max=self.config.freqMax) #min=1.0, max=2000.0)
+    self.frequency = sattr.Sattr(value=self.config.defaultFreq, min=self.config.freqMin, max=self.config.freqMax) #min=1.0, max=2000.0)
     self.log('freq initial: %.1f' % self.frequency.value)
     self.frequencyPos = sattr.Sattr(value = 0.0) #value=math.asin(self.frequency.value))
 
@@ -45,13 +44,7 @@ class AppClass:
     self.fileSounders = []
     for startSound in self.config.startSounds:
       self.fileSounders.append(sound.FileSound(path=startSound, gain=0.3, verbose=True))
-    self.mixSound = sound.FileSound(path=self.config.activateSound, gain=1.0, verbose=True)
-
-    self.mouse = mouse.MouseFileReader()
-    # self.mouse.xSensitivity = 0.001
-    # self.mouse.ySensitivity = 1.3
-    # self.mouse.x = self.gain.value
-    # self.mouse.y = self.frequency.value
+    self.mixSound = sound.FileSound(path=self.config.mixingAudio, gain=1.0, verbose=True)
 
     # config GPIOs (used by rotary input)
     GPIO.setmode(GPIO.BCM)
@@ -87,7 +80,14 @@ class AppClass:
     self.forcedIdleTimer.update(dt)
     # tell the monitor how much time has elapsed and what the current gain level is,
     # it will trigger the 'Monitor::shakeItUp' signal if the gain has been too low for too long
-    self.monitor.update(dt, self.gain.value)
+    # note that we're using a sound file for the mixing now, so our gain level
+    # (which is only used for the wave-forms) will be zero, but we still want the monitor to know we're
+    # making sound, so we'll simply use the specified idLimit instead
+    monitorValue = self.gain.value
+    if self.status.value == 'mixing':
+      monitorValue = self.monitor.idleLimit + 0.1
+
+    self.monitor.update(dt, monitorValue)
 
   def destroy(self):
     self.app.close()
@@ -115,9 +115,9 @@ class AppClass:
     if self.status.value == 'idle':
       self.status.set('mixing')
       self.mixSound.play()
-
+      self.gain.animateTo(0.0) # turn wave of during mixing, we're using an audio file instead
       # self.gain.setMin(self.monitor.idleLimit)
-      self.gain.animateTo(self.config.activateGain)
+      # self.gain.animateTo(self.config.activateGain)
 
   def handleActivationComplete(self, sender):
     if self.status.value == 'mixing':
@@ -179,6 +179,12 @@ class AppClass:
       self.log('starting timer (%s to %s)' % (sender.prev, sender.value))
     else:
       self.activityTimer.stop()
+
+    if sender.value == 'idle':
+      self.frequency.set(self.config.defaultFreq)
+
+    if sender.value != 'mixing':
+      self.mixSound.stop()
 
   def onMaxActivity(self, sender):
     self.log('zeroing gain')
