@@ -17,9 +17,9 @@ import RPi.GPIO as GPIO
 from touch import CapReader, CapReaderGroup
 import math
 import random
+from timer import Timer
 
 class AppClass:
-  updateSound = False
 
   def __init__(self, verbose=False):
     self.verbose = verbose
@@ -61,9 +61,9 @@ class AppClass:
       self.rotary = RotaryEncoder(pinA=self.config.rotaryA, pinB=self.config.rotaryB, button=None, callback=self.onRotary, verbose=True)
 
     self.monitor = monitor.ActivityMonitor(maxIdle=(3), activateDuration=(2), idleLimit=0.3)
-
     self.touches = CapReaderGroup(inPins=self.config.touchInPins, outPins=self.config.touchOutPins, noTouchDelay=self.config.noTouchDelay, verbose=True)
-
+    self.activityTimer = Timer(duration=self.config.maxInteraction, verbose=True)
+    self.forcedIdleTimer = Timer(duration=self.config.minIdle, verbose=True)
     self.gain.setMax(1.0) #self.monitor.idleLimit+0.1)
 
     dispatcher.connect( self.onFreqPosChange, signal='Sattr::changed', sender=self.frequencyPos )
@@ -73,6 +73,8 @@ class AppClass:
     dispatcher.connect( self.handleActivationComplete, signal='Monitor::activationComplete', sender=dispatcher.Any )
     dispatcher.connect( self.onTouchCountChange, signal='Sattr::changed', sender=self.touches.touchCount)
     dispatcher.connect( self.onStatusChange, signal='Sattr::changed', sender=self.status )
+    dispatcher.connect( self.onMaxActivity, signal='Timer::finished', sender=self.activityTimer )
+    dispatcher.connect( self.onForcedIdleDone, signal='Timer::finished', sender=self.forcedIdleTimer )
 
     self.app.run()
     self.status.set('idle')
@@ -80,19 +82,11 @@ class AppClass:
   def update(self, dt=0.0):
     self.touches.update(dt)
     self.gain.update(dt)
-
+    self.activityTimer.update(dt) 
+    self.forcedIdleTimer.update(dt)
     # tell the monitor how much time has elapsed and what the current gain level is,
     # it will trigger the 'Monitor::shakeItUp' signal if the gain has been too low for too long
     self.monitor.update(dt, self.gain.value)
-
-    #self.gain.set(self.mouse.x)
-    #self.frequency.set(self.mouse.y)
-
-    # updateSound could be set to by the handleChange callback method
-    # if self.updateSound == True: 
-    #  print ("Freq: %.1f, Peak: %.1f"  % (self.frequency.value, self.gain.value))
-    #  self.sounder.change(frequency = self.frequency.value)
-    #  self.updateSound = False
 
   def destroy(self):
     self.app.close()
@@ -109,7 +103,6 @@ class AppClass:
     self.frequency.set(min + delta * (math.sin(sender.value) * 0.5 + 0.5))
 
   def onFreqChange(self, sender):
-    # self.updateSound = True    
     self.log("Freq: %.1f, Gain: %.1f"  % (self.frequency.value, self.gain.value))
     self.sounder.change(frequency = self.frequency.value)
 
@@ -140,6 +133,9 @@ class AppClass:
       self.gain.set(self.gain.value - self.config.rotaryGainStep)
 
   def onTouchCountChange(self, sender):
+    if self.status.value == 'forcedIdle':
+      return # ignore touches during forced idle
+
     if sender.value == 0:
       self.log("Lost capacitive control")
       # touch count just turned zero, we just lost our last touch (delay already taken into account)
@@ -175,6 +171,19 @@ class AppClass:
 
   def onStatusChange(self, sender):
     self.log('STATUS: %s' % sender.value)
+    if sender.value == 'interactive':
+      self.activityTimer.start()
+    else:
+      self.activityTimer.stop()
+
+  def onMaxActivity(self, sender):
+    self.log('zeroing gain')
+    self.gain.animateTo(0.0)
+    self.status.set('forcedIdle')
+    self.forcedIdleTimer.start()
+
+  def onForcedIdleDone(self, sender):
+    self.status.set('idle')
 
   def log(self, msg):
     if self.verbose:
