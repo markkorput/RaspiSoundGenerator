@@ -17,7 +17,7 @@ class Sattr:
     self.startTime = None
     self.duration = None
 
-  def set(self, value):
+  def set(self, value, dispatch=True):
     if self.max != None and value > self.max:
       value = self.max
 
@@ -27,7 +27,7 @@ class Sattr:
     self.prev = self.value
     self.value = value
 
-    if self.prev != value:
+    if self.prev != value and dispatch:
       dispatcher.send( signal='Sattr::changed', sender=self )
 
   def setMin(self, minVal):

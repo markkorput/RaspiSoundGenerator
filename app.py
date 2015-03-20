@@ -199,7 +199,7 @@ class AppClass:
       self.log('setting initial gain')
       # self.gain.setMin(self.config.initialActiveGainMin)
       self.gain.animateTo(self.config.initialActiveGainMin)
-      self.position.set(0.0)
+      self.position.set(value=0.0, dispatch=False)
       #self.frequency.set(self.config.touchFreqs[sender.value])
       #return
 
